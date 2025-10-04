@@ -89,7 +89,7 @@ let finalOutput = mix(night.rgb, day.rgb, dayStrength);
 finalOutput = mix(finalOutput, atmosphereColor, atmosphereMix);
 globeMaterial.outputNode = vec4(finalOutput, 1.0);
 
-const sphereGeometry = new THREE.SphereGeometry(1, 64, 64);
+const sphereGeometry = new THREE.SphereGeometry(10 / 109, 64, 64);
 globe = new THREE.Mesh(sphereGeometry, globeMaterial);
 globe.position.set(500, 0, 0);
 scene.add(globe);
