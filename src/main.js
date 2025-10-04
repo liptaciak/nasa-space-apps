@@ -2,6 +2,16 @@ import * as THREE from "three/webgpu";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { makeTextSprite } from "./drawingUtils";
 
+// --- Constants ---
+const AU = 149597870.7; // km
+const scaleFactor = 0.00005;
+const planetScale = 50;
+const sunRadius = 300;
+
+// --- Orbit Colors ---
+const ORBIT_COLOR = 0xffffff; // White for regular planets
+const NEO_ORBIT_COLOR = 0xff4444; // Red for NEOs
+
 // --- Scene & Renderer ---
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 500000);
@@ -13,12 +23,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 const clock = new THREE.Clock();
-
-// --- Constants ---
-const AU = 149597870.7; // km
-const scaleFactor = 0.00005;
-const planetScale = 50;
-const sunRadius = 300;
 
 // --- Textures ---
 const textureLoader = new THREE.TextureLoader();
@@ -200,7 +204,7 @@ async function loadCities() {
 }
 
 // --- Draw inclined orbit ---
-function drawInclinedOrbit(radiusAU, inclinationDeg, color = 0xffffff) {
+function drawInclinedOrbit(radiusAU, inclinationDeg, color = ORBIT_COLOR) {
   const segments = 256;
   const points = [];
   const incRad = THREE.MathUtils.degToRad(inclinationDeg);
@@ -280,11 +284,11 @@ planets.forEach(p => {
     planetLabels.push(label);
   }
 
-  drawInclinedOrbit(p.radiusAU, p.inclination, p.color);
+  drawInclinedOrbit(p.radiusAU, p.inclination, ORBIT_COLOR);
 });
 
 // Add Earth's orbit
-drawInclinedOrbit(1.0, 0, 0x2233ff);
+drawInclinedOrbit(1.0, 0, ORBIT_COLOR);
 
 // Add Earth label with FIXED text sprite
 const earthLabel = createFixedTextSprite("Earth", {
@@ -302,11 +306,246 @@ if (earthLabel) {
   planetLabels.push(earthLabel);
 }
 
-// --- FIXED Animate function ---
+// --- NEOs Data Structure ---
+const neos = [
+  {
+    name: "Apophis",
+    semiMajorAxis: 0.922, // AU
+    eccentricity: 0.191,
+    inclination: 3.3, // degrees
+    longitudeOfAscendingNode: 204.4, // degrees
+    argumentOfPeriapsis: 126.4, // degrees
+    meanAnomaly: 180, // degrees
+    radius: 0.2, // relative to Earth
+    color: 0xff4444
+  },
+  {
+    name: "Bennu",
+    semiMajorAxis: 1.126, // AU
+    eccentricity: 0.204,
+    inclination: 6.0, // degrees
+    longitudeOfAscendingNode: 82.3, // degrees
+    argumentOfPeriapsis: 66.2, // degrees
+    meanAnomaly: 120, // degrees
+    radius: 0.15, // relative to Earth
+    color: 0x884400
+  },
+  {
+    name: "2006 QV89",
+    semiMajorAxis: 1.064, // AU
+    eccentricity: 0.181,
+    inclination: 1.1, // degrees
+    longitudeOfAscendingNode: 168.5, // degrees
+    argumentOfPeriapsis: 245.3, // degrees
+    meanAnomaly: 45, // degrees
+    radius: 0.08, // relative to Earth
+    color: 0x888888
+  }
+];
+
+const neoMeshes = [];
+const neoLabels = [];
+
+// --- Draw NEO Function ---
+function drawNEO(neoData, name, radius) {
+  const {
+    semiMajorAxis,
+    eccentricity,
+    inclination,
+    longitudeOfAscendingNode,
+    argumentOfPeriapsis,
+    meanAnomaly,
+    color = 0xaaaaaa
+  } = neoData;
+
+  // Convert angles to radians
+  const incRad = THREE.MathUtils.degToRad(inclination);
+  const omegaRad = THREE.MathUtils.degToRad(longitudeOfAscendingNode);
+  const wRad = THREE.MathUtils.degToRad(argumentOfPeriapsis);
+  const M0Rad = THREE.MathUtils.degToRad(meanAnomaly);
+
+  // Calculate orbital parameters
+  const a = semiMajorAxis * AU * scaleFactor; // semi-major axis in scene units
+  const e = eccentricity;
+  
+  // Calculate mean motion (simplified - for more accuracy, use actual orbital period)
+  const orbitalPeriod = Math.sqrt(Math.pow(semiMajorAxis, 3)); // Kepler's third law (years)
+  const meanMotion = (2 * Math.PI) / (orbitalPeriod * 365.25); // radians per day (simplified)
+
+  // Create NEO mesh
+  const neoRadius = planetScale * radius;
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(neoRadius, 16, 16),
+    new THREE.MeshBasicMaterial({ 
+      color: color,
+      transparent: true,
+      opacity: 0.9
+    })
+  );
+
+  // Store orbital data for animation
+  mesh.userData = {
+    name: name,
+    semiMajorAxis: a,
+    eccentricity: e,
+    inclination: incRad,
+    longitudeOfAscendingNode: omegaRad,
+    argumentOfPeriapsis: wRad,
+    meanAnomaly: M0Rad,
+    meanMotion: meanMotion,
+    trueAnomaly: 0,
+    orbitalPeriod: orbitalPeriod
+  };
+
+  // Calculate initial position
+  updateNEOPosition(mesh, 0);
+  
+  scene.add(mesh);
+  neoMeshes.push(mesh);
+
+  // Create NEO label
+  const label = createFixedTextSprite(name, {
+    fontsize: 12,
+    fillStyle: "#ff8888",
+    backgroundColor: "rgba(0,0,0,0.8)",
+    padding: 4
+  });
+
+  if (label) {
+    label.userData.neo = mesh;
+    label.position.copy(mesh.position);
+    label.position.y += neoRadius * 5; // Larger offset for better visibility
+    scene.add(label);
+    neoLabels.push(label);
+  }
+
+  // Draw NEO orbit with NEO_ORBIT_COLOR
+  drawNEOOrbit(neoData, NEO_ORBIT_COLOR);
+
+  console.log(`Added NEO: ${name} at radius ${radius}`);
+}
+
+// --- Update NEO Position using Keplerian Elements ---
+function updateNEOPosition(neoMesh, deltaTime) {
+  const data = neoMesh.userData;
+  
+  // Update mean anomaly (simplified - in real simulation, you'd solve Kepler's equation)
+  data.meanAnomaly += data.meanMotion * deltaTime * 100; // Speed factor
+  
+  // Keep mean anomaly in [0, 2π] range
+  data.meanAnomaly = data.meanAnomaly % (2 * Math.PI);
+  
+  // Solve Kepler's equation for eccentric anomaly (using iterative approximation)
+  let E = data.meanAnomaly; // Initial guess
+  for (let i = 0; i < 10; i++) { // Newton-Raphson iteration
+    E = E - (E - data.eccentricity * Math.sin(E) - data.meanAnomaly) / (1 - data.eccentricity * Math.cos(E));
+  }
+  
+  // Calculate true anomaly
+  const trueAnomaly = 2 * Math.atan2(
+    Math.sqrt(1 + data.eccentricity) * Math.sin(E / 2),
+    Math.sqrt(1 - data.eccentricity) * Math.cos(E / 2)
+  );
+  
+  // Calculate distance from focus
+  const r = data.semiMajorAxis * (1 - data.eccentricity * Math.cos(E));
+  
+  // Position in orbital plane
+  const xOrbital = r * Math.cos(trueAnomaly);
+  const yOrbital = 0;
+  const zOrbital = r * Math.sin(trueAnomaly);
+  
+  // Apply orbital orientation transformations
+  // 1. Apply argument of periapsis (rotation around Z in orbital plane)
+  const x1 = xOrbital * Math.cos(data.argumentOfPeriapsis) - zOrbital * Math.sin(data.argumentOfPeriapsis);
+  const z1 = xOrbital * Math.sin(data.argumentOfPeriapsis) + zOrbital * Math.cos(data.argumentOfPeriapsis);
+  
+  // 2. Apply inclination (rotation around X)
+  const x2 = x1;
+  const y2 = yOrbital * Math.cos(data.inclination) - z1 * Math.sin(data.inclination);
+  const z2 = yOrbital * Math.sin(data.inclination) + z1 * Math.cos(data.inclination);
+  
+  // 3. Apply longitude of ascending node (rotation around Y)
+  const x3 = x2 * Math.cos(data.longitudeOfAscendingNode) - z2 * Math.sin(data.longitudeOfAscendingNode);
+  const y3 = y2;
+  const z3 = x2 * Math.sin(data.longitudeOfAscendingNode) + z2 * Math.cos(data.longitudeOfAscendingNode);
+  
+  neoMesh.position.set(x3, y3, z3);
+  data.trueAnomaly = trueAnomaly;
+}
+
+// --- Draw NEO Orbit ---
+function drawNEOOrbit(neoData, color = NEO_ORBIT_COLOR) {
+  const {
+    semiMajorAxis,
+    eccentricity,
+    inclination,
+    longitudeOfAscendingNode,
+    argumentOfPeriapsis
+  } = neoData;
+
+  // Convert to radians
+  const incRad = THREE.MathUtils.degToRad(inclination);
+  const omegaRad = THREE.MathUtils.degToRad(longitudeOfAscendingNode);
+  const wRad = THREE.MathUtils.degToRad(argumentOfPeriapsis);
+
+  const a = semiMajorAxis * AU * scaleFactor;
+  const e = eccentricity;
+  const b = a * Math.sqrt(1 - e * e); // semi-minor axis
+  
+  const segments = 512;
+  const points = [];
+
+  for (let i = 0; i <= segments; i++) {
+    const theta = (i / segments) * Math.PI * 2;
+    
+    // Elliptical coordinates in orbital plane
+    const r = (a * (1 - e * e)) / (1 + e * Math.cos(theta));
+    const xOrbital = r * Math.cos(theta);
+    const yOrbital = 0;
+    const zOrbital = r * Math.sin(theta);
+    
+    // Apply orbital orientation transformations (same as in position calculation)
+    const x1 = xOrbital * Math.cos(wRad) - zOrbital * Math.sin(wRad);
+    const z1 = xOrbital * Math.sin(wRad) + zOrbital * Math.cos(wRad);
+    
+    const x2 = x1;
+    const y2 = yOrbital * Math.cos(incRad) - z1 * Math.sin(incRad);
+    const z2 = yOrbital * Math.sin(incRad) + z1 * Math.cos(incRad);
+    
+    const x3 = x2 * Math.cos(omegaRad) - z2 * Math.sin(omegaRad);
+    const y3 = y2;
+    const z3 = x2 * Math.sin(omegaRad) + z2 * Math.cos(omegaRad);
+    
+    points.push(new THREE.Vector3(x3, y3, z3));
+  }
+
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineBasicMaterial({
+    color: color,
+    transparent: true,
+    opacity: 0.3,
+    linewidth: 1
+  });
+  
+  const orbitLine = new THREE.Line(geometry, material);
+  orbitLine.frustumCulled = false;
+  orbitLine.userData = { isNEOOrbit: true };
+  scene.add(orbitLine);
+}
+
+// --- Add NEOs to Scene ---
+function addNEOsToScene() {
+  neos.forEach(neo => {
+    drawNEO(neo, neo.name, neo.radius);
+  });
+}
+
+// --- SINGLE CORRECTED Animate function ---
 function animate() {
   const delta = clock.getDelta();
 
-  globe.rotateY(delta*0.5);
+  globe.rotateY(delta * 0.5);
 
   // Store Earth's previous position to calculate movement
   const previousEarthPosition = globe.position.clone();
@@ -329,6 +568,11 @@ function animate() {
     const z = orbitalY * Math.sin(incRad) + orbitalZ * Math.cos(incRad);
 
     mesh.position.set(x, y, z);
+  });
+
+  // Update NEOs with proper orbital mechanics
+  neoMeshes.forEach(neoMesh => {
+    updateNEOPosition(neoMesh, delta);
   });
 
   // Update Earth position
@@ -364,13 +608,26 @@ function animate() {
 
       label.position.copy(planet.position);
       label.position.y += planetRadius * 3;
-      
-      // Fixed label rotation - always face camera
       label.lookAt(camera.position);
       
-      // Better scaling
       const distance = camera.position.distanceTo(planet.position);
       const scale = Math.max(10, distance * 0.005);
+      label.scale.setScalar(scale);
+    }
+  });
+
+  // Update NEO labels
+  neoLabels.forEach(label => {
+    if (label.userData.neo) {
+      const neo = label.userData.neo;
+      const neoRadius = neo.geometry.parameters.radius;
+      
+      label.position.copy(neo.position);
+      label.position.y += neoRadius * 8; // Larger offset for NEOs
+      label.lookAt(camera.position);
+      
+      const distance = camera.position.distanceTo(neo.position);
+      const scale = Math.max(8, distance * 0.004);
       label.scale.setScalar(scale);
     }
   });
@@ -379,21 +636,21 @@ function animate() {
   globe.children.forEach(child => {
     if (child.isSprite) {
       child.lookAt(camera.position);
-      // Scale city labels appropriately
       const distance = camera.position.distanceTo(child.position);
       const scale = Math.max(5, distance * 0.003);
       child.scale.setScalar(scale);
     }
   });
 
-  // NO controls.update() since we disabled damping
-  // This prevents any automatic camera movement
   renderer.render(scene, camera);
 }
 
-// Start the animation and load cities
+// --- Initialize everything ---
+addNEOsToScene(); // Add NEOs to the scene
+loadCities(); // Load cities
+
+// Start the animation
 renderer.setAnimationLoop(animate);
-loadCities();
 
 // --- Handle window resize ---
 window.addEventListener('resize', () => {
