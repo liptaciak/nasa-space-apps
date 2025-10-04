@@ -1,4 +1,5 @@
 import * as THREE from "three/webgpu";
+import { normalWorldGeometry, texture, vec3, vec4, normalize, positionWorld, cameraPosition, color, uniform, mix } from "three/tsl";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { makeTextSprite } from "./drawingUtils";
 
@@ -84,6 +85,22 @@ approachesModal.addEventListener("click", (e) => {
   }
 });
 
+// --- Constants ---
+const AU = 149597870.7; // km
+const scaleFactor = 0.00005;
+const planetScale = 50;
+const sunRadius = 300;
+
+// --- Orbit Colors ---
+const ORBIT_COLOR = 0xffffff;
+const NEO_ORBIT_COLOR = 0xff4444;
+const MOON_ORBIT_COLOR = 0x8888ff;
+
+// --- Label Scaling Constants ---
+const LABEL_SCALE_FACTOR = 0.0001;
+const MIN_LABEL_SCALE = 0.3;
+const MAX_LABEL_SCALE = 2.0;
+
 // --- Scene & Renderer ---
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 500000);
@@ -155,6 +172,11 @@ const moonMeshes = [];
 const moonLabels = [];
 const moonOrbits = [];
 
+// --- Earth with TSL Shader (Like your example) ---
+const earthRadius = planetScale;
+const globe = new THREE.Group();
+globe.name = "earth";
+
 // TSL Shader Material for Earth (like your example)
 const atmosphereDayColor = uniform(color("#4db2ff"));
 const atmosphereTwilightColor = uniform(color("#000000"));
@@ -166,10 +188,8 @@ const lightDir = normalize(vec3(0,0,0).sub(positionWorld));
 const sunOrientation = normalWorldGeometry.dot(lightDir).toVar();
 const atmosphereColor = mix(atmosphereTwilightColor, atmosphereDayColor, sunOrientation.smoothstep(-0.25, 0.75));
 
-// --- Earth (as globe group) ---
-const earthRadius = planetScale;
-const globe = new THREE.Group();
-globe.name = "earth";
+const globeMaterial = new THREE.MeshStandardNodeMaterial();
+globeMaterial.colorNode = texture(dayTexture);
 
 const night = texture(nightTexture);
 const day = texture(dayTexture);
