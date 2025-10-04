@@ -1,0 +1,114 @@
+[
+  {
+    "city": "Tokyo",
+    "latitude_deg": 35.6895,
+    "longitude_deg": 139.6917,
+    "country": "Japan",
+    "continent": "Asia"
+  },
+  {
+    "city": "Delhi",
+    "latitude_deg": 28.6139,
+    "longitude_deg": 77.209,
+    "country": "India",
+    "continent": "Asia"
+  },
+  {
+    "city": "Shanghai",
+    "latitude_deg": 31.2304,
+    "longitude_deg": 121.4737,
+    "country": "China",
+    "continent": "Asia"
+  },
+  {
+    "city": "S\u00e3o Paulo",
+    "latitude_deg": -23.5505,
+    "longitude_deg": -46.6333,
+    "country": "Brazil",
+    "continent": "South America"
+  },
+  {
+    "city": "Mexico City",
+    "latitude_deg": 19.4326,
+    "longitude_deg": -99.1332,
+    "country": "Mexico",
+    "continent": "North America"
+  },
+  {
+    "city": "Cairo",
+    "latitude_deg": 30.0444,
+    "longitude_deg": 31.2357,
+    "country": "Egypt",
+    "continent": "Africa"
+  },
+  {
+    "city": "Istanbul",
+    "latitude_deg": 41.0082,
+    "longitude_deg": 28.9784,
+    "country": "Turkey",
+    "continent": "Europe"
+  },
+  {
+    "city": "Buenos Aires",
+    "latitude_deg": -34.6037,
+    "longitude_deg": -58.3816,
+    "country": "Argentina",
+    "continent": "South America"
+  },
+  {
+    "city": "Lagos",
+    "latitude_deg": 6.5244,
+    "longitude_deg": 3.3792,
+    "country": "Nigeria",
+    "continent": "Africa"
+  },
+  {
+    "city": "Kinshasa",
+    "latitude_deg": -4.4419,
+    "longitude_deg": 15.2663,
+    "country": "DRC",
+    "continent": "Africa"
+  },
+  {
+    "city": "Moscow",
+    "latitude_deg": 55.7558,
+    "longitude_deg": 37.6173,
+    "country": "Russia",
+    "continent": "Europe"
+  },
+  {
+    "city": "Paris",
+    "latitude_deg": 48.8566,
+    "longitude_deg": 2.3522,
+    "country": "France",
+    "continent": "Europe"
+  },
+  {
+    "city": "New York City",
+    "latitude_deg": 40.7128,
+    "longitude_deg": -74.006,
+    "country": "USA",
+    "continent": "North America"
+  },
+  {
+    "city": "Lima",
+    "latitude_deg": -12.0464,
+    "longitude_deg": -77.0428,
+    "country": "Peru",
+    "continent": "South America"
+  },
+  {
+    "city": "Toronto",
+    "latitude_deg": 43.6511,
+    "longitude_deg": -79.3832,
+    "country": "Canada",
+    "continent": "North America"
+  },
+  {
+    "city": "Sydney",
+    "latitude_deg": -33.8688,
+    "longitude_deg": 151.2093,
+    "country": "Australia",
+    "continent": "Oceania"
+  }
+]
