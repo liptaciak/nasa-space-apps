@@ -1,0 +1,29 @@
+{
+  "name": "hackathon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx vite . --port 5l05"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Szponciciele/frontend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Szponciciele/frontend/issues"
+  },
+  "homepage": "https://github.com/Szponciciele/frontend#readme",
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.14",
+    "i18next": "^25.5.3",
+    "tailwindcss": "^4.1.14",
+    "three": "^0.180.0",
+    "vite": "^7.1.9"
+  }
+}
