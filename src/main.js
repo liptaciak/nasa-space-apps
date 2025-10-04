@@ -1,4 +1,5 @@
 import * as THREE from "three/webgpu";
+import { normalWorldGeometry, texture, vec3, vec4, normalize, positionWorld, cameraPosition, color, uniform, mix } from "three/tsl";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { makeTextSprite } from "./drawingUtils";
 
@@ -9,9 +10,9 @@ const planetScale = 50;
 const sunRadius = 300;
 
 // --- Orbit Colors ---
-const ORBIT_COLOR = 0xffffff; // White for regular planets
-const NEO_ORBIT_COLOR = 0xff4444; // Red for NEOs
-const MOON_ORBIT_COLOR = 0x8888ff; // Blue for moon orbits
+const ORBIT_COLOR = 0xffffff;
+const NEO_ORBIT_COLOR = 0xff4444;
+const MOON_ORBIT_COLOR = 0x8888ff;
 
 // --- Label Scaling Constants ---
 const LABEL_SCALE_FACTOR = 0.0001;
@@ -36,6 +37,8 @@ const sunTexture = textureLoader.load("assets/textures/sun.webp");
 sunTexture.colorSpace = THREE.SRGBColorSpace;
 const dayTexture = textureLoader.load("assets/textures/earth_day.webp");
 dayTexture.colorSpace = THREE.SRGBColorSpace;
+const nightTexture = textureLoader.load("assets/textures/earth_night.webp");
+nightTexture.colorSpace = THREE.SRGBColorSpace;
 const bgTexture = textureLoader.load("assets/textures/milky_way.webp");
 bgTexture.colorSpace = THREE.SRGBColorSpace;
 scene.background = bgTexture;
@@ -47,13 +50,10 @@ const sunMesh = new THREE.Mesh(
 );
 scene.add(sunMesh);
 
-// --- Lighting ---
+// --- Lighting (Like your example) ---
 const sunLight = new THREE.DirectionalLight("#ffffff", 2);
-sunLight.position.set(1000, 0, 0); // Position light away from sun for better lighting
+sunLight.position.set(0, 0, 0);
 scene.add(sunLight);
-
-const ambientLight = new THREE.AmbientLight(0x333333, 0.5);
-scene.add(ambientLight);
 
 // --- Moons Data ---
 const moonsData = {
@@ -90,21 +90,61 @@ const moonMeshes = [];
 const moonLabels = [];
 const moonOrbits = [];
 
-// --- Earth ---
+// --- Earth with TSL Shader (Like your example) ---
 const earthRadius = planetScale;
 const globe = new THREE.Group();
 globe.name = "earth";
 
-// FIXED: Simple working Earth material
+// TSL Shader Material for Earth (like your example)
+const atmosphereDayColor = uniform(color("#4db2ff"));
+const atmosphereTwilightColor = uniform(color("#000000"));
+
+const viewDirection = positionWorld.sub(cameraPosition).normalize();
+const fresnel = viewDirection.dot(normalWorldGeometry).abs().oneMinus().toVar();
+
+const lightDir = normalize(vec3(0,0,0).sub(positionWorld));
+const sunOrientation = normalWorldGeometry.dot(lightDir).toVar();
+const atmosphereColor = mix(atmosphereTwilightColor, atmosphereDayColor, sunOrientation.smoothstep(-0.25, 0.75));
+
+const globeMaterial = new THREE.MeshStandardNodeMaterial();
+globeMaterial.colorNode = texture(dayTexture);
+
+const night = texture(nightTexture);
+const day = texture(dayTexture);
+const dayStrength = sunOrientation.smoothstep(-0.25, 0.5);
+
+const atmosphereDayStrength = sunOrientation.smoothstep(-0.5, 1);
+const atmosphereMix = atmosphereDayStrength.mul(fresnel.pow(2)).clamp(0, 1);
+
+let finalOutput = mix(night.rgb, day.rgb, dayStrength);
+finalOutput = mix(finalOutput, atmosphereColor, atmosphereMix);
+
+globeMaterial.outputNode = vec4(finalOutput, 1.0);
+
+// Create Earth mesh with TSL shader
 const earth = new THREE.Mesh(
-  new THREE.SphereGeometry(earthRadius, 32, 32),
-  new THREE.MeshStandardMaterial({ 
-    map: dayTexture,
-    roughness: 0.7,
-    metalness: 0.3
-  })
+  new THREE.SphereGeometry(earthRadius, 64, 64),
+  globeMaterial
 );
 globe.add(earth);
+
+// Atmosphere (like your example)
+const atmosphereMaterial = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide, transparent: true });
+let alpha = fresnel.remap(0.73, 1, 1, 0).pow(3);
+const lightFactor = sunOrientation.smoothstep(-0.5, 1).clamp(0,1);
+const litColor = atmosphereDayColor;
+const darkColor = color("#001020");
+const finalColor = mix(darkColor, litColor, lightFactor);
+alpha = alpha.mul(mix(0.3, 1.0, lightFactor));
+atmosphereMaterial.outputNode = vec4(finalColor, alpha);
+
+const atmosphere = new THREE.Mesh(
+  new THREE.SphereGeometry(earthRadius, 64, 64),
+  atmosphereMaterial
+);
+atmosphere.scale.setScalar(1.06);
+globe.add(atmosphere);
+
 scene.add(globe);
 
 // --- Camera & Controls ---
@@ -194,7 +234,7 @@ function createMoonOrbit(planetMesh, moonDistance) {
   });
   
   const orbitLine = new THREE.Line(geometry, material);
-  orbitLine.position.copy(planetMesh.position);
+  orbitLine.userData = { planet: planetMesh };
   orbitLine.frustumCulled = false;
   scene.add(orbitLine);
   moonOrbits.push(orbitLine);
@@ -218,7 +258,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
     })
   );
   
-  // Position moon around planet
+  // Position moon relative to planet
   const angle = (moonIndex / (moonsData[planetMesh.userData.name]?.length || 1)) * Math.PI * 2;
   moon.position.set(
     moonDistance * Math.cos(angle),
@@ -226,18 +266,17 @@ function createMoon(planetMesh, moonData, moonIndex) {
     moonDistance * Math.sin(angle)
   );
   
-  // Add to planet's position
-  moon.position.add(planetMesh.position);
-  
   moon.userData = {
     name: moonData.name,
     planet: planetMesh,
     distance: moonDistance,
     orbitSpeed: moonData.orbitSpeed,
-    angle: angle
+    angle: angle,
+    localPosition: moon.position.clone() // Store local position
   };
   
-  scene.add(moon);
+  // Add moon to planet (so it moves with the planet)
+  planetMesh.add(moon);
   moonMeshes.push(moon);
   
   // Create moon orbit
@@ -255,7 +294,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
     label.userData.moon = moon;
     label.position.copy(moon.position);
     label.position.y += moonRadius * 4;
-    scene.add(label);
+    planetMesh.add(label); // Add label to planet so it moves with the planet
     moonLabels.push(label);
   }
   
@@ -591,22 +630,17 @@ function animate() {
   // Update NEOs
   neoMeshes.forEach(neoMesh => updateNEOPosition(neoMesh, delta));
 
-  // Update moons and their orbits
+  // Update moons (they automatically move with their parent planets)
   moonMeshes.forEach(moon => {
     const data = moon.userData;
     data.angle += data.orbitSpeed * delta * 20;
-    const planet = data.planet;
-    const distance = data.distance;
     
-    // Update moon position relative to planet
+    // Update moon's local position relative to its parent planet
     moon.position.set(
-      distance * Math.cos(data.angle),
+      data.distance * Math.cos(data.angle),
       0,
-      distance * Math.sin(data.angle)
+      data.distance * Math.sin(data.angle)
     );
-    
-    // Add planet's position
-    moon.position.add(planet.position);
   });
 
   // Update moon orbit positions
@@ -660,11 +694,14 @@ function updateLabels(labels, yOffsetMultiplier) {
     const target = label.userData.planet || label.userData.moon || label.userData.neo;
     if (target) {
       const radius = target.geometry?.parameters.radius || earthRadius;
-      label.position.copy(target.position);
+      // Get world position for labels attached to planets
+      const worldPosition = new THREE.Vector3();
+      target.getWorldPosition(worldPosition);
+      label.position.copy(worldPosition);
       label.position.y += radius * yOffsetMultiplier;
       label.lookAt(camera.position);
       
-      const distance = camera.position.distanceTo(target.position);
+      const distance = camera.position.distanceTo(worldPosition);
       const scale = Math.min(MAX_LABEL_SCALE, Math.max(MIN_LABEL_SCALE, distance * LABEL_SCALE_FACTOR));
       label.scale.copy(label.userData.originalScale).multiplyScalar(scale);
     }
