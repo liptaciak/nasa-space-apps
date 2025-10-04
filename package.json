@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx vite . --port 5l05"
+    "dev": "npx vite . --port 5105"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
   "homepage": "https://github.com/Szponciciele/frontend#readme",
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
+    "@types/three": "^0.180.0",
     "i18next": "^25.5.3",
     "tailwindcss": "^4.1.14",
     "three": "^0.180.0",
