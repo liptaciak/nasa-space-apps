@@ -17,8 +17,11 @@ i18next.init({
   },
 });
 
-document.getElementById("list").innerHTML = i18next.t("list");
+// document.getElementById("list").innerHTML = i18next.t("list");
+// i18...
+
 let camera, scene, renderer, controls, globe, clock;
+
 scene = new THREE.Scene();
 camera = new THREE.PerspectiveCamera(
   75,
@@ -45,7 +48,7 @@ const sun = new THREE.DirectionalLight("#ffffff", 2);
 sun.position.set(0, 0, 3);
 scene.add(sun);
 
-const sunTexture = textureLoader.load("./textures/sun.webp");
+const sunTexture = textureLoader.load("assets/textures/sun.webp");
 sunTexture.colorSpace = THREE.SRGBColorSpace;
 const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
 const sunGeometry = new THREE.SphereGeometry(10, 64, 64);
@@ -53,13 +56,13 @@ const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
 sunMesh.position.set(0, 0, 0);
 scene.add(sunMesh);
 
-const bgTexture = textureLoader.load("./textures/milky_way.webp");
+const bgTexture = textureLoader.load("assets/textures/milky_way.webp");
 bgTexture.colorSpace = THREE.SRGBColorSpace;
 scene.background = bgTexture;
 
-const dayTexture = textureLoader.load("./textures/earth_day.webp");
+const dayTexture = textureLoader.load("assets/textures/earth_day.webp");
 dayTexture.colorSpace = THREE.SRGBColorSpace;
-const nightTexture = textureLoader.load("./textures/earth_night.webp");
+const nightTexture = textureLoader.load("assets/textures/earth_night.webp");
 nightTexture.colorSpace = THREE.SRGBColorSpace;
 
 const atmosphereDayColor = uniform(color("#4db2ff"));
@@ -129,7 +132,7 @@ function onWindowResize() {
 controls.target.copy(globe.position);
 
 async function loadCities() {
-  const res = await fetch("cities.json");
+  const res = await fetch("assets/cities.json");
   const cityData = await res.json();
 
   cityData.forEach((city) => {

@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 
-
 function makeTextSprite(message, parameters = {}) {
     const fontface = parameters.fontface || 'Arial';
     const fontsize = parameters.fontsize || 40;
@@ -30,14 +29,8 @@ function makeTextSprite(message, parameters = {}) {
     return sprite;
 }
 
-function createOrbit(){
+function createOrbit() {
 
 }
-
-
-
-
-
-
 
 export {makeTextSprite}
