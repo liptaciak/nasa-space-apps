@@ -98,13 +98,6 @@
     "continent": "South America"
   },
   {
-    "city": "Toronto",
-    "latitude_deg": 43.6511,
-    "longitude_deg": -79.3832,
-    "country": "Canada",
-    "continent": "North America"
-  },
-  {
     "city": "Sydney",
     "latitude_deg": -33.8688,
     "longitude_deg": 151.2093,
