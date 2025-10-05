@@ -63,7 +63,7 @@
                 </div>
             </div>
         </div>
-        <div id="asteroidDetails" class="absolute top-1/2 -translate-y-1/2 left-8 z-30 bg-gray backdrop-blur-xl border border-gray-600 rounded-xl px-8 py-6">
+        <div id="asteroidDetails" class="absolute hidden top-1/2 -translate-y-1/2 left-8 z-30 bg-gray backdrop-blur-xl border border-gray-600 rounded-xl px-8 py-6">
             <div class="flex flex-col space-y-5">
                 <div class="flex flex-row justify-between items-center space-x-12">
                     <h2 class="text-2xl font-mono font-bold tracking-wide">433 Eros</h2>
@@ -87,7 +87,17 @@
                     <span class="text-xs text-gray-400">Miss distance: 0.00027 AU</span>
                 </div>
                 <div id="orbitalStatsDetails" class="flex flex-col space-y-1 mt-2 hidden">
-                    <span class="text-xs text-gray-400">Eccentricity: 0.22</span>
+                    <span class="text-xs text-gray-400">Eccentricity (e): 0.2228</span>
+                    <span class="text-xs text-gray-400">Semi-major axis (a): 1.4581 AU</span>
+                    <span class="text-xs text-gray-400">Perihelion distance (q): 1.1332 AU</span>
+                    <span class="text-xs text-gray-400">Inclination (i): 10.83°</span>
+                    <span class="text-xs text-gray-400">Longitude of ascending node (Ω): 304.27°</span>
+                    <span class="text-xs text-gray-400">Argument of perihelion (ω): 178.93°</span>
+                    <span class="text-xs text-gray-400">Mean anomaly (M): 310.55°</span>
+                    <span class="text-xs text-gray-400">Time of perihelion passage (tp): Feb 17.33 2026 TDB</span>
+                    <span class="text-xs text-gray-400">Orbital period: 643.12 d (1.76 yr)</span>
+                    <span class="text-xs text-gray-400">Mean motion (n): 0.5598°/d</span>
+                    <span class="text-xs text-gray-400">Aphelion distance (Q): 1.7830 AU</span>
                 </div>
                 <div id="impactEffectsDetails" class="flex flex-col space-y-1 mt-2 hidden">
                     <span class="text-xs text-gray-400">Miss distance: 0.00027 AU</span>
@@ -127,7 +137,7 @@
                             </svg>
                         </button>
                     </div>
-                    <p class="text-gray-400">TODO</p>
+                    <div id="approachesList" class="flex flex-col space-y-2 pr-6 max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"></div>
                 </div>
             </div>
         </div>
@@ -159,23 +169,19 @@
                     </div>
                     <div class="relative">
                         <input type="text"
-                            placeholder="Search asteroids or names..."
-                            class="w-full bg-black/30 border border-gray-600 rounded-xl px-12 py-3
-                                    focus:outline-none focus:border-gray-300 placeholder-gray-500 text-lg" />
+                id="searchInput"
+                placeholder="Search asteroids or names..."
+                class="w-full bg-black/30 border border-gray-600 rounded-xl px-12 py-3
+                    focus:outline-none focus:border-gray-300 placeholder-gray-500 text-lg" />
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" viewBox="0 0 16 16">
                             <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
                         </svg>
                     </div>
-                    <div class="mt-4 space-y-6 pr-6 max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparentt">
-                        <div class="flex justify-between items-center group hover:cursor-pointer">
-                            <p class="font-mono text-gray-300 group-hover:text-white">Apophis</p>
-                            <span class="text-sm text-gray-500">Miss Distance: 0.00027 AU</span>
-                        </div>
-                    </div>
+                    <div id="searchResults" class="mt-4 space-y-6 pr-6 max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"></div>
                 </div>
             </div>
         </div>
-        <div id="mapModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div id="mapModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
             <div class="bg-[--color-primary-dark] p-8 rounded-lg relative w-3/4 h-3/4 max-w-4xl">
                 <button id="closeMapModal" class="absolute top-2 right-2 text-white hover:text-gray-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
