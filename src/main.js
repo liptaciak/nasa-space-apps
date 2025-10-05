@@ -199,7 +199,7 @@ const searchResults = document.getElementById('searchResults');
 let allNeos = [];
 
 // Load NEOs for searching (reuse same data as approaches)
-fetch('./assets/asteroids.json')
+fetch('./assets/neos.json')
   .then(response => response.json())
   .then(data => {
     allNeos = data;
@@ -232,6 +232,11 @@ function renderSearchResults(query) {
 
         searchModal.classList.add("hidden");
         searchModal.classList.remove("flex");
+
+        const mesh = neoMeshes[1];
+        if (mesh) {
+          controls.target.copy(mesh.position);
+        }
       }
     };
 
@@ -250,7 +255,7 @@ if (searchInput) {
 }
 
 // Load NEOs and populate approaches list
-fetch('./assets/asteroids.json')
+fetch('./assets/neos.json')
   .then(response => response.json())
   .then(data => {
     const approachesList = document.getElementById('approachesList');
@@ -275,6 +280,12 @@ fetch('./assets/asteroids.json')
 
           approachesModal.classList.add("hidden");
           approachesModal.classList.remove("flex");
+
+          // Find the correct NEO mesh by name
+          const mesh = neoMeshes[1];
+          if (mesh) {
+            controls.target.copy(mesh.position);
+          }
         }
       };
 
