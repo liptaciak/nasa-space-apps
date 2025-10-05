@@ -4,6 +4,8 @@
         <meta charset="utf-8" />
         <title>Szponciciele</title>
         <link rel="stylesheet" href="./output.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     </head>
@@ -84,11 +86,14 @@
                     <span class="text-xs text-gray-400">Closest approach: Nov 30 2025 02:18</span>
                     <span class="text-xs text-gray-400">Miss distance: 0.00027 AU</span>
                 </div>
-                <div id="orbitalStatsDetails"class="flex flex-col space-y-1 mt-2 hidden">
+                <div id="orbitalStatsDetails" class="flex flex-col space-y-1 mt-2 hidden">
                     <span class="text-xs text-gray-400">Eccentricity: 0.22</span>
                 </div>
-                <div id="impactEffectsDetails"class="flex flex-col space-y-1 mt-2 hidden">
+                <div id="impactEffectsDetails" class="flex flex-col space-y-1 mt-2 hidden">
                     <span class="text-xs text-gray-400">Miss distance: 0.00027 AU</span>
+                    <button id="mapButton" class="bg-[--color-primary] text-white px-4 py-2 rounded-md hover:bg-[--color-primary-light] transition-colors">
+                            View Impact Map
+                    </button>
                 </div>
                 <div class="flex flex-row items-center justify-center space-x-4 mt-6">
                     <span id="essentialStatsDot" class="bg-white rounded-full size-3"></span>
@@ -155,7 +160,7 @@
                     <div class="relative">
                         <input type="text"
                             placeholder="Search asteroids or names..."
-                            class="w-full bg-black/30 border border-gray-600 rounded-xl px-12 py-3 
+                            class="w-full bg-black/30 border border-gray-600 rounded-xl px-12 py-3
                                     focus:outline-none focus:border-gray-300 placeholder-gray-500 text-lg" />
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" viewBox="0 0 16 16">
                             <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
@@ -169,6 +174,46 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div id="mapModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-[--color-primary-dark] p-8 rounded-lg relative w-3/4 h-3/4 max-w-4xl">
+                <button id="closeMapModal" class="absolute top-2 right-2 text-white hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <div id="mapContainer" class="w-200 h-250 rounded-md overflow-hidden"></div>
+            </div>
+            <div id="mapStats" class="w-1/3 h-full bg-gray-50 p-6 overflow-y-auto border-l border-gray-200">
+                  <h3 class="text-xl font-bold mb-4 text-gray-800 border-b border-gray-300 pb-2">Simulated Impact Statistics</h3>
+                  <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                      <h4 class="font-semibold text-gray-700 mb-2">Affected Areas</h4>
+                      <ul class="text-sm space-y-1 text-gray-600">
+                        <li><strong>Countries:</strong> 12</li>
+                        <li><strong>Population Exposed:</strong> 1.8 billion</li>
+                        <li><strong>Crucial Facilities:</strong> 247 (airports, power plants, hospitals)</li>
+                      </ul>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                      <h4 class="font-semibold text-gray-700 mb-2">Economic Impact</h4>
+                      <ul class="text-sm space-y-1 text-gray-600">
+                        <li><strong>Estimated Costs:</strong> $1.2 trillion USD</li>
+                        <li><strong>Infrastructure Damage:</strong> 65% of major cities</li>
+                        <li><strong>Environmental Cleanup:</strong> $450 billion USD</li>
+                      </ul>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                      <h4 class="font-semibold text-gray-700 mb-2">Casualties &amp; Effects</h4>
+                      <ul class="text-sm space-y-1 text-gray-600">
+                        <li><strong>Estimated Fatalities:</strong> 450 million</li>
+                        <li><strong>Injuries:</strong> 1.1 billion</li>
+                        <li><strong>Global Climate Disruption:</strong> 5-10 years of cooling</li>
+                      </ul>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4 italic">These are simulated estimates based on a hypothetical direct impact scenario for 433 Eros. Actual close approach on Nov 30, 2025, poses no collision risk.</p>
+                  </div>
+                </div>
         </div>
         <script type="module" src="./src/main.js"></script>
     </body>

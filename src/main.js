@@ -84,6 +84,93 @@ approachesModal.addEventListener("click", (e) => {
   }
 });
 
+
+const mapBtn = document.getElementById('mapButton');
+const mapModal = document.getElementById('mapModal');
+const closeMapModal = document.getElementById('closeMapModal');
+let osmMap; // Global to avoid re-init
+
+mapBtn.addEventListener('click', () => {
+  mapModal.classList.remove('hidden');
+  mapModal.classList.add('flex');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      try {
+        if (!osmMap) {
+          osmMap = L.map('mapContainer', {
+            center: [0, 0],
+            zoom: 3,
+            attributionControl: true
+          });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+          }).addTo(osmMap);
+          const impactSite = [0, 0]; // Placeholder; could be dynamic lat/lon
+          L.marker(impactSite).addTo(osmMap)
+            .bindPopup('Simulated Impact Site')
+            .openPopup();
+          L.circle(impactSite, {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.3,
+            radius: 90000  // Crater (~90 km)
+          }).addTo(osmMap).bindPopup('Crater Radius (~90 km)');
+          L.circle(impactSite, {
+            color: 'orange',
+            fillColor: '#ff9900',
+            fillOpacity: 0.2,
+            radius: 220000  // Fireball (~220 km)
+          }).addTo(osmMap).bindPopup('Fireball Radius (~220 km)');
+          L.circle(impactSite, {
+            color: 'brown',
+            fillColor: '#8b4513',
+            fillOpacity: 0.1,
+            radius: 4400000  // Ejecta (~4400 km)
+          }).addTo(osmMap).bindPopup('Ejecta Radius (~4400 km)');
+          L.circle(impactSite, {
+            color: 'blue',
+            fillColor: '#0000ff',
+            fillOpacity: 0.1,
+            radius: 5000000  // Tsunami (~5000 km, approximate affected zone)
+          }).addTo(osmMap).bindPopup('Tsunami Affected Radius (~5000 km)');
+          setTimeout(() => {
+            if (osmMap) osmMap.invalidateSize();
+          }, 100);
+        } else {
+          osmMap.invalidateSize();
+        }
+      } catch (error) {
+        console.error('Leaflet init error:', error);
+      }
+    });
+  });
+
+  // Optional: Dynamically update stats based on current asteroid data
+  // For now, stats are static in HTML; could fetch/populate here if API-integrated
+  updateMapStats(); // Define this function if making dynamic
+});
+
+function updateMapStats() {
+  // Example dynamic update (placeholder - integrate with asteroid data)
+  const statsEl = document.getElementById('mapStats');
+  // Could update innerHTML or specific elements based on current NEO
+  // e.g., statsEl.querySelector('li:nth-child(1)').textContent = `Countries: ${dynamicData.countries}`;
+}
+
+closeMapModal.addEventListener('click', () => {
+    mapModal.classList.add('hidden');
+    mapModal.classList.remove('flex');
+});
+
+mapModal.addEventListener('click', (e) => {
+    if (e.target === mapModal) {
+        mapModal.classList.add('hidden');
+        mapModal.classList.remove('flex');
+    }
+});
+
 const essentialStatsBtn = document.getElementById("essentialStats");
 const orbitalStatsBtn = document.getElementById("orbitalStats");
 const impactEffectsBtn = document.getElementById("impactEffects");
@@ -102,7 +189,7 @@ function updateStatsTab() {
   if (currentStatsTab === 0) {
     essentialStatsBtn.classList.remove("text-gray-300");
     essentialStatsBtn.classList.add("text-white", "underline", "underline-offset-6");
-    
+
     essentialStatsDot.classList.remove("bg-gray-400", "size-2");
     essentialStatsDot.classList.add("bg-white", "size-3");
 
@@ -124,10 +211,10 @@ function updateStatsTab() {
   } else if (currentStatsTab === 1) {
     orbitalStatsBtn.classList.remove("text-gray-300");
     orbitalStatsBtn.classList.add("text-white", "underline", "underline-offset-6");
-    
+
     orbitalStatsDot.classList.remove("bg-gray-400", "size-2");
     orbitalStatsDot.classList.add("bg-white", "size-3");
-   
+
     essentialStatsBtn.classList.remove("text-white", "underline", "underline-offset-6");
     impactEffectsBtn.classList.remove("text-white", "underline", "underline-offset-6");
 
@@ -146,7 +233,7 @@ function updateStatsTab() {
   } else if (currentStatsTab === 2) {
     impactEffectsBtn.classList.remove("text-gray-300");
     impactEffectsBtn.classList.add("text-white", "underline", "underline-offset-6");
-    
+
     impactEffectsDot.classList.remove("bg-gray-400", "size-2");
     impactEffectsDot.classList.add("bg-white", "size-3");
 
@@ -250,7 +337,7 @@ const moonTexture = textureLoader.load("assets/textures/moon.jpg");
 // --- Sun ---
 const sunMesh = new THREE.Mesh(
   new THREE.SphereGeometry(sunRadius, 64, 64),
-  new THREE.MeshBasicMaterial({ 
+  new THREE.MeshBasicMaterial({
     map: sunTexture,
     toneMapped: false
   })
@@ -291,14 +378,14 @@ const orbitalPeriods = {
 function calculateOrbitalSpeed(planetName, radiusAU) {
   // Get actual orbital period from data
   const orbitalPeriodYears = orbitalPeriods[planetName];
-  
+
   // Convert to angular speed (radians per second)
   const orbitalPeriodSeconds = orbitalPeriodYears * 365.25 * 24 * 60 * 60;
   const angularSpeed = (2 * Math.PI) / orbitalPeriodSeconds;
-  
+
   // Scale for animation - make orbits visible in reasonable time
   const animationScale = 5000;
-  
+
   return angularSpeed * animationScale;
 }
 
@@ -341,40 +428,40 @@ function createFixedTextSprite(text, parameters = {}) {
   const fillStyle = parameters.fillStyle || "#ffffff";
   const backgroundColor = parameters.backgroundColor || "rgba(0,0,0,0.8)";
   const padding = parameters.padding || 8;
-  
+
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
   const resolutionScale = 2;
-  
+
   context.font = `Bold ${fontsize * resolutionScale}px Arial`;
   const metrics = context.measureText(text);
   const textWidth = metrics.width;
-  
+
   canvas.width = (textWidth + padding * 2 * resolutionScale);
   canvas.height = (fontsize * resolutionScale + padding * 2 * resolutionScale);
-  
+
   context.fillStyle = backgroundColor;
   context.fillRect(0, 0, canvas.width, canvas.height);
-  
+
   context.font = `Bold ${fontsize * resolutionScale}px Arial`;
   context.fillStyle = fillStyle;
   context.textAlign = 'center';
   context.textBaseline = 'middle';
   context.fillText(text, canvas.width / 2, canvas.height / 2);
-  
+
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  
-  const material = new THREE.SpriteMaterial({ 
+
+  const material = new THREE.SpriteMaterial({
     map: texture,
     transparent: true
   });
-  
+
   const sprite = new THREE.Sprite(material);
   sprite.scale.set(canvas.width / (40 * resolutionScale), canvas.height / (40 * resolutionScale), 1);
   sprite.userData.originalScale = sprite.scale.clone();
-  
+
   return sprite;
 }
 
@@ -382,30 +469,30 @@ function createFixedTextSprite(text, parameters = {}) {
 function createMoonOrbit(planetMesh, moonDistance) {
   const segments = 64;
   const points = [];
-  
+
   for (let i = 0; i <= segments; i++) {
     const theta = (i / segments) * Math.PI * 2;
     const x = moonDistance * Math.cos(theta);
     const z = moonDistance * Math.sin(theta);
     points.push(new THREE.Vector3(x, 0, z));
   }
-  
+
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const material = new THREE.LineBasicMaterial({ 
-    color: MOON_ORBIT_COLOR, 
-    transparent: true, 
+  const material = new THREE.LineBasicMaterial({
+    color: MOON_ORBIT_COLOR,
+    transparent: true,
     opacity: 0.6,
     linewidth: 1
   });
-  
+
   const orbitLine = new THREE.Line(geometry, material);
   orbitLine.userData = { planet: planetMesh };
   orbitLine.frustumCulled = false;
-  
+
   // Add orbit to the planet so it moves with the planet
   planetMesh.add(orbitLine);
   moonOrbits.push(orbitLine);
-  
+
   return orbitLine;
 }
 
@@ -414,20 +501,20 @@ function createMoon(planetMesh, moonData, moonIndex) {
   const planetRadius = planetMesh.geometry.parameters.radius;
   const moonRadius = planetRadius * moonData.radius;
   const moonDistance = planetRadius * moonData.distance;
-  
+
   // Create moon mesh
-  const moonMaterial = new THREE.MeshStandardMaterial({ 
+  const moonMaterial = new THREE.MeshStandardMaterial({
     map: moonData.texture || null,
     color: moonData.texture ? 0xffffff : moonData.color,
     roughness: 0.8,
     metalness: 0.2
   });
-  
+
   const moon = new THREE.Mesh(
     new THREE.SphereGeometry(moonRadius, 16, 16),
     moonMaterial
   );
-  
+
   // Position moon relative to planet
   const angle = (moonIndex / (moonsData[planetMesh.userData.name]?.length || 1)) * Math.PI * 2;
   moon.position.set(
@@ -435,7 +522,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
     0,
     moonDistance * Math.sin(angle)
   );
-  
+
   moon.userData = {
     name: moonData.name,
     planet: planetMesh,
@@ -443,14 +530,14 @@ function createMoon(planetMesh, moonData, moonIndex) {
     orbitSpeed: moonData.orbitSpeed,
     angle: angle
   };
-  
+
   // Add moon to planet (so it moves with the planet)
   planetMesh.add(moon);
   moonMeshes.push(moon);
-  
+
   // Create moon orbit
   createMoonOrbit(planetMesh, moonDistance);
-  
+
   // Create moon label
   const label = createFixedTextSprite(moonData.name, {
     fontsize: 10,
@@ -458,7 +545,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
     backgroundColor: "rgba(0,0,0,0.8)",
     padding: 3
   });
-  
+
   if (label) {
     label.userData.moon = moon;
     label.position.copy(moon.position);
@@ -466,7 +553,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
     planetMesh.add(label);
     moonLabels.push(label);
   }
-  
+
   console.log(`Added moon: ${moonData.name} to ${planetMesh.userData.name}`);
 }
 
@@ -557,7 +644,7 @@ function createSaturnRings(planetMesh) {
   const innerRadius = planetMesh.geometry.parameters.radius * 1.5;
   const outerRadius = planetMesh.geometry.parameters.radius * 2.5;
   const thetaSegments = 64;
-  
+
   const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, thetaSegments);
   const ringMaterial = new THREE.MeshBasicMaterial({
     map: saturnRingTexture,
@@ -566,11 +653,11 @@ function createSaturnRings(planetMesh) {
     opacity: 0.8,
     alphaTest: 0.5
   });
-  
+
   const rings = new THREE.Mesh(ringGeometry, ringMaterial);
   rings.rotation.x = Math.PI / 2;
   planetMesh.add(rings);
-  
+
   return rings;
 }
 
@@ -583,23 +670,23 @@ function drawInclinedOrbit(radiusAU, inclinationDeg, color = ORBIT_COLOR) {
 
   for (let i = 0; i <= segments; i++) {
     const theta = (i / segments) * Math.PI * 2;
-    
+
     const orbitalX = radius * Math.cos(theta);
     const orbitalY = 0;
     const orbitalZ = radius * Math.sin(theta);
-    
+
     const x = orbitalX;
     const y = orbitalY * Math.cos(incRad) - orbitalZ * Math.sin(incRad);
     const z = orbitalY * Math.sin(incRad) + orbitalZ * Math.cos(incRad);
-    
+
     points.push(new THREE.Vector3(x, y, z));
   }
 
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const material = new THREE.LineBasicMaterial({ 
-    color, 
-    transparent: true, 
-    opacity: 0.4 
+  const material = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.4
   });
   const line = new THREE.Line(geometry, material);
   line.frustumCulled = false;
@@ -611,7 +698,7 @@ planets.forEach(p => {
   if (p.name === "Earth") return;
 
   const radius = planetScale * p.size;
-  const material = new THREE.MeshStandardMaterial({ 
+  const material = new THREE.MeshStandardMaterial({
     map: p.texture || null,
     color: p.texture ? 0xffffff : p.color,
     roughness: 0.8,
@@ -737,7 +824,7 @@ async function loadCities() {
         globe.add(label);
       }
     });
-    
+
     console.log(`Loaded ${cityData.length} cities`);
   } catch (error) {
     console.error("Error loading cities:", error);
@@ -748,11 +835,11 @@ async function loadCities() {
 function latLongToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
-  
+
   const x = -(radius * Math.sin(phi) * Math.cos(theta));
   const z = radius * Math.sin(phi) * Math.sin(theta);
   const y = radius * Math.cos(phi);
-  
+
   return new THREE.Vector3(x, y, z);
 }
 
@@ -810,17 +897,17 @@ function updateNEOPosition(neoMesh, deltaTime) {
   const data = neoMesh.userData;
   data.meanAnomaly += data.meanMotion * deltaTime * 100;
   data.meanAnomaly %= (2 * Math.PI);
-  
+
   let E = data.meanAnomaly;
   for (let i = 0; i < 10; i++) {
     E = E - (E - data.eccentricity * Math.sin(E) - data.meanAnomaly) / (1 - data.eccentricity * Math.cos(E));
   }
-  
+
   const trueAnomaly = 2 * Math.atan2(Math.sqrt(1 + data.eccentricity) * Math.sin(E / 2), Math.sqrt(1 - data.eccentricity) * Math.cos(E / 2));
   const r = data.semiMajorAxis * (1 - data.eccentricity * Math.cos(E));
   const xOrbital = r * Math.cos(trueAnomaly);
   const zOrbital = r * Math.sin(trueAnomaly);
-  
+
   const x1 = xOrbital * Math.cos(data.argumentOfPeriapsis) - zOrbital * Math.sin(data.argumentOfPeriapsis);
   const z1 = xOrbital * Math.sin(data.argumentOfPeriapsis) + zOrbital * Math.cos(data.argumentOfPeriapsis);
   const x2 = x1;
@@ -828,7 +915,7 @@ function updateNEOPosition(neoMesh, deltaTime) {
   const z2 = z1 * Math.cos(data.inclination);
   const x3 = x2 * Math.cos(data.longitudeOfAscendingNode) - z2 * Math.sin(data.longitudeOfAscendingNode);
   const z3 = x2 * Math.sin(data.longitudeOfAscendingNode) + z2 * Math.cos(data.longitudeOfAscendingNode);
-  
+
   neoMesh.position.set(x3, y2, z3);
   data.trueAnomaly = trueAnomaly;
 }
@@ -841,7 +928,7 @@ function drawNEOOrbit(neoData, color = NEO_ORBIT_COLOR) {
   const wRad = THREE.MathUtils.degToRad(argumentOfPeriapsis);
   const a = semiMajorAxis * AU * scaleFactor;
   const e = eccentricity;
-  
+
   const segments = 512;
   const points = [];
   for (let i = 0; i <= segments; i++) {
@@ -849,7 +936,7 @@ function drawNEOOrbit(neoData, color = NEO_ORBIT_COLOR) {
     const r = (a * (1 - e * e)) / (1 + e * Math.cos(theta));
     const xOrbital = r * Math.cos(theta);
     const zOrbital = r * Math.sin(theta);
-    
+
     const x1 = xOrbital * Math.cos(wRad) - zOrbital * Math.sin(wRad);
     const z1 = xOrbital * Math.sin(wRad) + zOrbital * Math.cos(wRad);
     const x2 = x1;
@@ -857,7 +944,7 @@ function drawNEOOrbit(neoData, color = NEO_ORBIT_COLOR) {
     const z2 = z1 * Math.cos(incRad);
     const x3 = x2 * Math.cos(omegaRad) - z2 * Math.sin(omegaRad);
     const z3 = x2 * Math.sin(omegaRad) + z2 * Math.cos(omegaRad);
-    
+
     points.push(new THREE.Vector3(x3, y2, z3));
   }
 
@@ -886,7 +973,7 @@ function animate() {
   planetMeshes.forEach(mesh => {
     const data = mesh.userData;
     data.angle += data.orbitSpeed * delta; // Realistic speed
-    
+
     const orbitalRadius = data.orbitalRadius;
     const angle = data.angle;
     const incRad = data.inclination;
@@ -907,7 +994,7 @@ function animate() {
   moonMeshes.forEach(moon => {
     const data = moon.userData;
     data.angle += data.orbitSpeed * delta;
-    
+
     // Update moon's local position relative to its parent planet
     moon.position.set(
       data.distance * Math.cos(data.angle),
@@ -921,7 +1008,7 @@ function animate() {
     globe.userData.angle = 0;
     globe.userData.orbitSpeed = calculateOrbitalSpeed("Earth", 1.0);
   }
-  
+
   globe.userData.angle += globe.userData.orbitSpeed * delta;
   const earthOrbitalRadius = 1.0 * AU * scaleFactor;
   const earthX = earthOrbitalRadius * Math.cos(globe.userData.angle);
@@ -966,7 +1053,7 @@ function updateLabels(labels, yOffsetMultiplier) {
       label.position.copy(worldPosition);
       label.position.y += radius * yOffsetMultiplier;
       label.lookAt(camera.position);
-      
+
       const distance = camera.position.distanceTo(worldPosition);
       const scale = Math.min(MAX_LABEL_SCALE, Math.max(MIN_LABEL_SCALE, distance * LABEL_SCALE_FACTOR));
       label.scale.copy(label.userData.originalScale).multiplyScalar(scale);

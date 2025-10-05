@@ -7,3 +7,20 @@
     --color-primary-dark: #07173F,
     --color-white-dark: #FCFAFA,
 };
+#mapStats {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+#mapStats::-webkit-scrollbar {
+  width: 4px;
+}
+
+#mapStats::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#mapStats::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
