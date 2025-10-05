@@ -130,6 +130,7 @@ const venusTexture = textureLoader.load("assets/textures/venus.jpg");
 const marsTexture = textureLoader.load("assets/textures/mars.jpg");
 const jupiterTexture = textureLoader.load("assets/textures/jupiter.jpg");
 const saturnTexture = textureLoader.load("assets/textures/saturn.jpg");
+const saturnRingTexture = textureLoader.load("assets/textures/saturn_ring.png");
 const uranusTexture = textureLoader.load("assets/textures/uranus.jpg");
 const neptuneTexture = textureLoader.load("assets/textures/neptune.jpg");
 const moonTexture = textureLoader.load("assets/textures/moon.jpg");
@@ -139,7 +140,7 @@ const sunMesh = new THREE.Mesh(
   new THREE.SphereGeometry(sunRadius, 64, 64),
   new THREE.MeshBasicMaterial({ 
     map: sunTexture,
-    toneMapped: false // Sun should not be affected by tone mapping
+    toneMapped: false
   })
 );
 scene.add(sunMesh);
@@ -147,10 +148,6 @@ scene.add(sunMesh);
 // --- Enhanced Lighting System ---
 const sunLight = new THREE.DirectionalLight("#ffffff", 3);
 sunLight.position.set(0, 0, 0);
-sunLight.castShadow = true;
-sunLight.shadow.mapSize.width = 2048;
-sunLight.shadow.mapSize.height = 2048;
-sunLight.shadow.camera.far = 500000;
 scene.add(sunLight);
 
 // Ambient light to ensure all objects are visible
@@ -166,121 +163,65 @@ scene.add(pointLight);
 const hemisphereLight = new THREE.HemisphereLight(0x4444ff, 0x202020, 0.3);
 scene.add(hemisphereLight);
 
+// --- Realistic Orbital Periods (in Earth years) ---
+const orbitalPeriods = {
+  Mercury: 0.24,
+  Venus: 0.62,
+  Earth: 1.00,
+  Mars: 1.88,
+  Jupiter: 11.86,
+  Saturn: 29.46,
+  Uranus: 84.01,
+  Neptune: 164.8
+};
+
+// --- Calculate realistic orbital speed ---
+function calculateOrbitalSpeed(planetName, radiusAU) {
+  // Get actual orbital period from data
+  const orbitalPeriodYears = orbitalPeriods[planetName];
+  
+  // Convert to angular speed (radians per second)
+  const orbitalPeriodSeconds = orbitalPeriodYears * 365.25 * 24 * 60 * 60;
+  const angularSpeed = (2 * Math.PI) / orbitalPeriodSeconds;
+  
+  // Scale for animation - make orbits visible in reasonable time
+  const animationScale = 5000;
+  
+  return angularSpeed * animationScale;
+}
+
 // --- Moons Data ---
 const moonsData = {
   Earth: [
-    { name: "Moon", radius: 0.27, distance: 8, color: 0x888888, orbitSpeed: 0.1, texture: moonTexture }
+    { name: "Moon", radius: 0.27, distance: 25, color: 0x888888, orbitSpeed: 0.5, texture: moonTexture }
   ],
   Mars: [
-    { name: "Phobos", radius: 0.15, distance: 6, color: 0xaaaaaa, orbitSpeed: 0.2 },
-    { name: "Deimos", radius: 0.12, distance: 8, color: 0x999999, orbitSpeed: 0.15 }
+    { name: "Phobos", radius: 0.15, distance: 12, color: 0xaaaaaa, orbitSpeed: 1.0 },
+    { name: "Deimos", radius: 0.12, distance: 18, color: 0x999999, orbitSpeed: 0.8 }
   ],
   Jupiter: [
-    { name: "Io", radius: 0.4, distance: 15, color: 0xffaa66, orbitSpeed: 0.3 },
-    { name: "Europa", radius: 0.35, distance: 20, color: 0xffffff, orbitSpeed: 0.25 },
-    { name: "Ganymede", radius: 0.5, distance: 25, color: 0xcccccc, orbitSpeed: 0.2 }
+    { name: "Io", radius: 0.4, distance: 25, color: 0xffaa66, orbitSpeed: 0.7 },
+    { name: "Europa", radius: 0.35, distance: 35, color: 0xffffff, orbitSpeed: 0.6 },
+    { name: "Ganymede", radius: 0.5, distance: 45, color: 0xcccccc, orbitSpeed: 0.5 }
   ],
   Saturn: [
-    { name: "Mimas", radius: 0.2, distance: 15, color: 0xdddddd, orbitSpeed: 0.4 },
-    { name: "Enceladus", radius: 0.22, distance: 18, color: 0xeeeeee, orbitSpeed: 0.35 },
-    { name: "Titan", radius: 0.6, distance: 22, color: 0xffcc99, orbitSpeed: 0.15 }
+    { name: "Mimas", radius: 0.15, distance: 20, color: 0xdddddd, orbitSpeed: 0.9 },
+    { name: "Enceladus", radius: 0.18, distance: 28, color: 0xeeeeee, orbitSpeed: 0.8 },
+    { name: "Titan", radius: 0.6, distance: 40, color: 0xffcc99, orbitSpeed: 0.4 }
   ],
   Uranus: [
-    { name: "Miranda", radius: 0.15, distance: 12, color: 0xccccff, orbitSpeed: 0.5 },
-    { name: "Ariel", radius: 0.2, distance: 15, color: 0xaaaaff, orbitSpeed: 0.4 },
-    { name: "Umbriel", radius: 0.18, distance: 18, color: 0x9999ff, orbitSpeed: 0.35 }
+    { name: "Miranda", radius: 0.12, distance: 18, color: 0xccccff, orbitSpeed: 1.1 },
+    { name: "Ariel", radius: 0.2, distance: 25, color: 0xaaaaff, orbitSpeed: 0.9 }
   ],
   Neptune: [
-    { name: "Triton", radius: 0.4, distance: 15, color: 0x66aaff, orbitSpeed: 0.2 },
-    { name: "Nereid", radius: 0.12, distance: 25, color: 0x88bbff, orbitSpeed: 0.1 },
-    { name: "Proteus", radius: 0.16, distance: 20, color: 0x77aaff, orbitSpeed: 0.3 }
+    { name: "Triton", radius: 0.4, distance: 25, color: 0x66aaff, orbitSpeed: 0.5 },
+    { name: "Nereid", radius: 0.12, distance: 45, color: 0x88bbff, orbitSpeed: 0.3 }
   ]
 };
 
 const moonMeshes = [];
 const moonLabels = [];
 const moonOrbits = [];
-
-// --- Earth with TSL Shader ---
-const earthRadius = planetScale;
-const globe = new THREE.Group();
-globe.name = "earth";
-
-// TSL Shader Material for Earth
-const atmosphereDayColor = uniform(color("#4db2ff"));
-const atmosphereTwilightColor = uniform(color("#000000"));
-
-const viewDirection = positionWorld.sub(cameraPosition).normalize();
-const fresnel = viewDirection.dot(normalWorldGeometry).abs().oneMinus().toVar();
-
-const lightDir = normalize(vec3(0,0,0).sub(positionWorld));
-const sunOrientation = normalWorldGeometry.dot(lightDir).toVar();
-const atmosphereColor = mix(atmosphereTwilightColor, atmosphereDayColor, sunOrientation.smoothstep(-0.25, 0.75));
-
-const globeMaterial = new THREE.MeshStandardNodeMaterial();
-globeMaterial.colorNode = texture(dayTexture);
-
-const night = texture(nightTexture);
-const day = texture(dayTexture);
-const dayStrength = sunOrientation.smoothstep(-0.25, 0.5);
-
-const atmosphereDayStrength = sunOrientation.smoothstep(-0.5, 1);
-const atmosphereMix = atmosphereDayStrength.mul(fresnel.pow(2)).clamp(0, 1);
-
-let finalOutput = mix(night.rgb, day.rgb, dayStrength);
-finalOutput = mix(finalOutput, atmosphereColor, atmosphereMix);
-
-globeMaterial.outputNode = vec4(finalOutput, 1.0);
-
-// Create Earth mesh with TSL shader
-const earth = new THREE.Mesh(
-  new THREE.SphereGeometry(earthRadius, 64, 64),
-  globeMaterial
-);
-globe.add(earth);
-
-// Atmosphere
-const atmosphereMaterial = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide, transparent: true });
-let alpha = fresnel.remap(0.73, 1, 1, 0).pow(3);
-const lightFactor = sunOrientation.smoothstep(-0.5, 1).clamp(0,1);
-const litColor = atmosphereDayColor;
-const darkColor = color("#001020");
-const finalColor = mix(darkColor, litColor, lightFactor);
-alpha = alpha.mul(mix(0.3, 1.0, lightFactor));
-atmosphereMaterial.outputNode = vec4(finalColor, alpha);
-
-const atmosphere = new THREE.Mesh(
-  new THREE.SphereGeometry(earthRadius, 64, 64),
-  atmosphereMaterial
-);
-atmosphere.scale.setScalar(1.06);
-globe.add(atmosphere);
-
-scene.add(globe);
-
-// --- Camera & Controls ---
-camera.position.set(0, 200, 500);
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.minDistance = 50;
-controls.maxDistance = 100000;
-controls.target.copy(globe.position);
-
-// --- Planets with Textures ---
-const planets = [
-  { name: "Mercury", radiusAU: 0.387, inclination: 7, color: 0x888888, size: 0.38, hasMoons: false, texture: mercuryTexture },
-  { name: "Venus", radiusAU: 0.723, inclination: 3.39, color: 0xe6b856, size: 0.95, hasMoons: false, texture: venusTexture },
-  { name: "Earth", radiusAU: 1.0, inclination: 0, color: 0x2233ff, size: 1.0, hasMoons: true, texture: dayTexture },
-  { name: "Mars", radiusAU: 1.524, inclination: 1.85, color: 0xff6633, size: 0.53, hasMoons: true, texture: marsTexture },
-  { name: "Jupiter", radiusAU: 5.203, inclination: 1.3, color: 0xffaa66, size: 11.2, hasMoons: true, texture: jupiterTexture },
-  { name: "Saturn", radiusAU: 9.537, inclination: 2.49, color: 0xffdd99, size: 9.45, hasMoons: true, texture: saturnTexture },
-  { name: "Uranus", radiusAU: 19.191, inclination: 0.77, color: 0x99ddff, size: 4.01, hasMoons: true, texture: uranusTexture },
-  { name: "Neptune", radiusAU: 30.07, inclination: 1.77, color: 0x3366ff, size: 3.88, hasMoons: true, texture: neptuneTexture }
-];
-
-const planetMeshes = [];
-const planetLabels = [];
 
 // --- Text Sprite Function ---
 function createFixedTextSprite(text, parameters = {}) {
@@ -341,14 +282,16 @@ function createMoonOrbit(planetMesh, moonDistance) {
   const material = new THREE.LineBasicMaterial({ 
     color: MOON_ORBIT_COLOR, 
     transparent: true, 
-    opacity: 0.3,
+    opacity: 0.6,
     linewidth: 1
   });
   
   const orbitLine = new THREE.Line(geometry, material);
   orbitLine.userData = { planet: planetMesh };
   orbitLine.frustumCulled = false;
-  scene.add(orbitLine);
+  
+  // Add orbit to the planet so it moves with the planet
+  planetMesh.add(orbitLine);
   moonOrbits.push(orbitLine);
   
   return orbitLine;
@@ -369,7 +312,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
   });
   
   const moon = new THREE.Mesh(
-    new THREE.SphereGeometry(moonRadius, 12, 12),
+    new THREE.SphereGeometry(moonRadius, 16, 16),
     moonMaterial
   );
   
@@ -386,8 +329,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
     planet: planetMesh,
     distance: moonDistance,
     orbitSpeed: moonData.orbitSpeed,
-    angle: angle,
-    localPosition: moon.position.clone()
+    angle: angle
   };
   
   // Add moon to planet (so it moves with the planet)
@@ -408,7 +350,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
   if (label) {
     label.userData.moon = moon;
     label.position.copy(moon.position);
-    label.position.y += moonRadius * 4;
+    label.position.y += moonRadius * 3;
     planetMesh.add(label);
     moonLabels.push(label);
   }
@@ -416,53 +358,108 @@ function createMoon(planetMesh, moonData, moonIndex) {
   console.log(`Added moon: ${moonData.name} to ${planetMesh.userData.name}`);
 }
 
-// --- Load Cities ---
-async function loadCities() {
-  try {
-    const res = await fetch("assets/cities.json");
-    const cityData = await res.json();
+// --- Earth with TSL Shader ---
+const earthRadius = planetScale;
+const globe = new THREE.Group();
+globe.name = "earth";
 
-    cityData.forEach((city) => {
-      const lat = city.latitude_deg;
-      const lon = city.longitude_deg;
+// TSL Shader Material for Earth
+const atmosphereDayColor = uniform(color("#4db2ff"));
+const atmosphereTwilightColor = uniform(color("#000000"));
 
-      const pos = latLongToVector3(lat, lon, earthRadius * 1.01);
+const viewDirection = positionWorld.sub(cameraPosition).normalize();
+const fresnel = viewDirection.dot(normalWorldGeometry).abs().oneMinus().toVar();
 
-      const dotGeom = new THREE.SphereGeometry(earthRadius * 0.01, 8, 8);
-      const dotMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
-      const dot = new THREE.Mesh(dotGeom, dotMat);
-      dot.position.copy(pos);
-      globe.add(dot);
+const lightDir = normalize(vec3(0,0,0).sub(positionWorld));
+const sunOrientation = normalWorldGeometry.dot(lightDir).toVar();
+const atmosphereColor = mix(atmosphereTwilightColor, atmosphereDayColor, sunOrientation.smoothstep(-0.25, 0.75));
 
-      const label = createFixedTextSprite(city.city, {
-        fontsize: 120,
-        fillStyle: "white",
-        backgroundColor: "rgba(0,0,0,0.8)",
-        padding: 4
-      });
+const globeMaterial = new THREE.MeshStandardNodeMaterial();
+globeMaterial.colorNode = texture(dayTexture);
 
-      if (label) {
-        label.position.copy(latLongToVector3(lat + 1, lon, earthRadius * 1.05));
-        globe.add(label);
-      }
-    });
-    
-    console.log(`Loaded ${cityData.length} cities`);
-  } catch (error) {
-    console.error("Error loading cities:", error);
-  }
-}
+const night = texture(nightTexture);
+const day = texture(dayTexture);
+const dayStrength = sunOrientation.smoothstep(-0.25, 0.5);
 
-// --- Latitude/Longitude to Vector3 function ---
-function latLongToVector3(lat, lon, radius) {
-  const phi = (90 - lat) * (Math.PI / 180);
-  const theta = (lon + 180) * (Math.PI / 180);
+const atmosphereDayStrength = sunOrientation.smoothstep(-0.5, 1);
+const atmosphereMix = atmosphereDayStrength.mul(fresnel.pow(2)).clamp(0, 1);
+
+let finalOutput = mix(night.rgb, day.rgb, dayStrength);
+finalOutput = mix(finalOutput, atmosphereColor, atmosphereMix);
+
+globeMaterial.outputNode = vec4(finalOutput, 1.0);
+
+// Create Earth mesh with TSL shader
+const earth = new THREE.Mesh(
+  new THREE.SphereGeometry(earthRadius, 64, 64),
+  globeMaterial
+);
+earth.name = "earth_mesh";
+globe.add(earth);
+
+// Atmosphere
+const atmosphereMaterial = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide, transparent: true });
+let alpha = fresnel.remap(0.73, 1, 1, 0).pow(3);
+const lightFactor = sunOrientation.smoothstep(-0.5, 1).clamp(0,1);
+const litColor = atmosphereDayColor;
+const darkColor = color("#001020");
+const finalColor = mix(darkColor, litColor, lightFactor);
+alpha = alpha.mul(mix(0.3, 1.0, lightFactor));
+atmosphereMaterial.outputNode = vec4(finalColor, alpha);
+
+const atmosphere = new THREE.Mesh(
+  new THREE.SphereGeometry(earthRadius, 64, 64),
+  atmosphereMaterial
+);
+atmosphere.scale.setScalar(1.06);
+globe.add(atmosphere);
+
+scene.add(globe);
+
+// --- Camera & Controls ---
+camera.position.set(0, 200, 500);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 50;
+controls.maxDistance = 100000;
+controls.target.copy(globe.position);
+
+// --- Planets with Textures ---
+const planets = [
+  { name: "Mercury", radiusAU: 0.387, inclination: 7, color: 0x888888, size: 0.38, hasMoons: false, texture: mercuryTexture },
+  { name: "Venus", radiusAU: 0.723, inclination: 3.39, color: 0xe6b856, size: 0.95, hasMoons: false, texture: venusTexture },
+  { name: "Earth", radiusAU: 1.0, inclination: 0, color: 0x2233ff, size: 1.0, hasMoons: true, texture: dayTexture },
+  { name: "Mars", radiusAU: 1.524, inclination: 1.85, color: 0xff6633, size: 0.53, hasMoons: true, texture: marsTexture },
+  { name: "Jupiter", radiusAU: 5.203, inclination: 1.3, color: 0xffaa66, size: 11.2, hasMoons: true, texture: jupiterTexture },
+  { name: "Saturn", radiusAU: 9.537, inclination: 2.49, color: 0xffdd99, size: 9.45, hasMoons: true, texture: saturnTexture, hasRings: true },
+  { name: "Uranus", radiusAU: 19.191, inclination: 0.77, color: 0x99ddff, size: 4.01, hasMoons: true, texture: uranusTexture },
+  { name: "Neptune", radiusAU: 30.07, inclination: 1.77, color: 0x3366ff, size: 3.88, hasMoons: true, texture: neptuneTexture }
+];
+
+const planetMeshes = [];
+const planetLabels = [];
+
+// --- Create Saturn's Rings ---
+function createSaturnRings(planetMesh) {
+  const innerRadius = planetMesh.geometry.parameters.radius * 1.5;
+  const outerRadius = planetMesh.geometry.parameters.radius * 2.5;
+  const thetaSegments = 64;
   
-  const x = -(radius * Math.sin(phi) * Math.cos(theta));
-  const z = radius * Math.sin(phi) * Math.sin(theta);
-  const y = radius * Math.cos(phi);
+  const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, thetaSegments);
+  const ringMaterial = new THREE.MeshBasicMaterial({
+    map: saturnRingTexture,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.8,
+    alphaTest: 0.5
+  });
   
-  return new THREE.Vector3(x, y, z);
+  const rings = new THREE.Mesh(ringGeometry, ringMaterial);
+  rings.rotation.x = Math.PI / 2;
+  planetMesh.add(rings);
+  
+  return rings;
 }
 
 // --- Draw inclined orbit ---
@@ -518,10 +515,13 @@ planets.forEach(p => {
   const angle = Math.random() * Math.PI * 2;
   const incRad = THREE.MathUtils.degToRad(p.inclination);
 
+  // Calculate realistic orbital speed
+  const realisticOrbitSpeed = calculateOrbitalSpeed(p.name, p.radiusAU);
+
   mesh.userData = {
     name: p.name,
     orbitalRadius: orbitalRadius,
-    orbitSpeed: 0.005 + Math.random() * 0.01,
+    orbitSpeed: realisticOrbitSpeed,
     angle: angle,
     inclination: incRad,
     hasMoons: p.hasMoons
@@ -538,6 +538,11 @@ planets.forEach(p => {
   mesh.position.set(x, y, z);
   scene.add(mesh);
   planetMeshes.push(mesh);
+
+  // Create Saturn's rings
+  if (p.name === "Saturn" && p.hasRings) {
+    createSaturnRings(mesh);
+  }
 
   // Create moons for this planet if it has them
   if (p.hasMoons && moonsData[p.name]) {
@@ -588,6 +593,55 @@ if (moonsData.Earth) {
   moonsData.Earth.forEach((moon, index) => {
     createMoon(earth, moon, index);
   });
+}
+
+// --- Load Cities ---
+async function loadCities() {
+  try {
+    const res = await fetch("assets/cities.json");
+    const cityData = await res.json();
+
+    cityData.forEach((city) => {
+      const lat = city.latitude_deg;
+      const lon = city.longitude_deg;
+
+      const pos = latLongToVector3(lat, lon, earthRadius * 1.01);
+
+      const dotGeom = new THREE.SphereGeometry(earthRadius * 0.01, 8, 8);
+      const dotMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+      const dot = new THREE.Mesh(dotGeom, dotMat);
+      dot.position.copy(pos);
+      globe.add(dot);
+
+      const label = createFixedTextSprite(city.city, {
+        fontsize: 120,
+        fillStyle: "white",
+        backgroundColor: "rgba(0,0,0,0.8)",
+        padding: 4
+      });
+
+      if (label) {
+        label.position.copy(latLongToVector3(lat + 1, lon, earthRadius * 1.05));
+        globe.add(label);
+      }
+    });
+    
+    console.log(`Loaded ${cityData.length} cities`);
+  } catch (error) {
+    console.error("Error loading cities:", error);
+  }
+}
+
+// --- Latitude/Longitude to Vector3 function ---
+function latLongToVector3(lat, lon, radius) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lon + 180) * (Math.PI / 180);
+  
+  const x = -(radius * Math.sin(phi) * Math.cos(theta));
+  const z = radius * Math.sin(phi) * Math.sin(theta);
+  const y = radius * Math.cos(phi);
+  
+  return new THREE.Vector3(x, y, z);
 }
 
 // --- NEOs ---
@@ -716,10 +770,11 @@ function animate() {
 
   const previousEarthPosition = globe.position.clone();
 
-  // Update planets
+  // Update planets with realistic orbital speeds
   planetMeshes.forEach(mesh => {
     const data = mesh.userData;
-    data.angle += data.orbitSpeed * delta * 10;
+    data.angle += data.orbitSpeed * delta; // Realistic speed
+    
     const orbitalRadius = data.orbitalRadius;
     const angle = data.angle;
     const incRad = data.inclination;
@@ -739,7 +794,7 @@ function animate() {
   // Update moons
   moonMeshes.forEach(moon => {
     const data = moon.userData;
-    data.angle += data.orbitSpeed * delta * 20;
+    data.angle += data.orbitSpeed * delta;
     
     // Update moon's local position relative to its parent planet
     moon.position.set(
@@ -749,21 +804,13 @@ function animate() {
     );
   });
 
-  // Update moon orbit positions
-  moonOrbits.forEach(orbit => {
-    const planet = orbit.userData?.planet;
-    if (planet) {
-      orbit.position.copy(planet.position);
-    }
-  });
-
-  // Update Earth position
+  // Update Earth position with realistic speed
   if (!globe.userData.angle) {
     globe.userData.angle = 0;
-    globe.userData.orbitSpeed = 0.01;
+    globe.userData.orbitSpeed = calculateOrbitalSpeed("Earth", 1.0);
   }
   
-  globe.userData.angle += globe.userData.orbitSpeed * delta * 10;
+  globe.userData.angle += globe.userData.orbitSpeed * delta;
   const earthOrbitalRadius = 1.0 * AU * scaleFactor;
   const earthX = earthOrbitalRadius * Math.cos(globe.userData.angle);
   const earthZ = earthOrbitalRadius * Math.sin(globe.userData.angle);
