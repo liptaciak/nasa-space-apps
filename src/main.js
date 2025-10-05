@@ -98,6 +98,37 @@ const impactEffectsDetails = document.getElementById("impactEffectsDetails");
 
 let currentStatsTab = 0;
 
+// Load NEOs and populate approaches list
+fetch('./assets/neos.json')
+  .then(response => response.json())
+  .then(data => {
+    const approachesList = document.getElementById('approachesList');
+    if (!approachesList) return;
+    approachesList.innerHTML = '';
+    // Sort by approachDate (epoch, ascending)
+    data.sort((a, b) => (a.approachDate || 0) - (b.approachDate || 0));
+    data.forEach(neo => {
+      if (!neo.approachDate) return; // skip if no approachDate
+      const approachDate = new Date(neo.approachDate * 1000); // epoch seconds to ms
+      const formattedDate = approachDate.toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: '2-digit'
+      });
+      const div = document.createElement('div');
+      div.className = 'flex justify-between items-center group hover:cursor-pointer';
+      div.innerHTML = `
+        <p class="font-mono text-gray-300 group-hover:text-white">${neo.name}</p>
+        <span class="text-sm text-gray-500">Approach Date: ${formattedDate}</span>
+      `;
+      approachesList.appendChild(div);
+    });
+  })
+  .catch(err => {
+    const approachesList = document.getElementById('approachesList');
+    if (approachesList) {
+      approachesList.innerHTML = '<span class="text-red-400">Failed to load NEO data.</span>';
+    }
+  });
+
 function updateStatsTab() {
   if (currentStatsTab === 0) {
     essentialStatsBtn.classList.remove("text-gray-300");
