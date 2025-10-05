@@ -84,6 +84,118 @@ approachesModal.addEventListener("click", (e) => {
   }
 });
 
+const essentialStatsBtn = document.getElementById("essentialStats");
+const orbitalStatsBtn = document.getElementById("orbitalStats");
+const impactEffectsBtn = document.getElementById("impactEffects");
+
+const essentialStatsDot = document.getElementById("essentialStatsDot");
+const orbitalStatsDot = document.getElementById("orbitalStatsDot");
+const impactEffectsDot = document.getElementById("impactEffectsDot");
+
+const essentialStatsDetails = document.getElementById("essentialStatsDetails");
+const orbitalStatsDetails = document.getElementById("orbitalStatsDetails");
+const impactEffectsDetails = document.getElementById("impactEffectsDetails");
+
+let currentStatsTab = 0;
+
+function updateStatsTab() {
+  if (currentStatsTab === 0) {
+    essentialStatsBtn.classList.remove("text-gray-300");
+    essentialStatsBtn.classList.add("text-white", "underline", "underline-offset-6");
+    
+    essentialStatsDot.classList.remove("bg-gray-400", "size-2");
+    essentialStatsDot.classList.add("bg-white", "size-3");
+
+    orbitalStatsBtn.classList.remove("text-white", "underline", "underline-offset-6");
+    impactEffectsBtn.classList.remove("text-white", "underline", "underline-offset-6");
+
+    orbitalStatsBtn.classList.add("text-gray-300");
+    impactEffectsBtn.classList.add("text-gray-300");
+
+    orbitalStatsDot.classList.remove("bg-white", "size-3");
+    orbitalStatsDot.classList.add("bg-gray-400", "size-2");
+
+    impactEffectsDot.classList.remove("bg-white", "size-3");
+    impactEffectsDot.classList.add("bg-gray-400", "size-2");
+
+    essentialStatsDetails.classList.remove("hidden");
+    orbitalStatsDetails.classList.add("hidden");
+    impactEffectsDetails.classList.add("hidden");
+  } else if (currentStatsTab === 1) {
+    orbitalStatsBtn.classList.remove("text-gray-300");
+    orbitalStatsBtn.classList.add("text-white", "underline", "underline-offset-6");
+    
+    orbitalStatsDot.classList.remove("bg-gray-400", "size-2");
+    orbitalStatsDot.classList.add("bg-white", "size-3");
+   
+    essentialStatsBtn.classList.remove("text-white", "underline", "underline-offset-6");
+    impactEffectsBtn.classList.remove("text-white", "underline", "underline-offset-6");
+
+    essentialStatsBtn.classList.add("text-gray-300");
+    impactEffectsBtn.classList.add("text-gray-300");
+
+    essentialStatsDot.classList.remove("bg-white", "size-3");
+    essentialStatsDot.classList.add("bg-gray-400", "size-2");
+
+    impactEffectsDot.classList.remove("bg-white", "size-3");
+    impactEffectsDot.classList.add("bg-gray-400", "size-2");
+
+    essentialStatsDetails.classList.add("hidden");
+    orbitalStatsDetails.classList.remove("hidden");
+    impactEffectsDetails.classList.add("hidden");
+  } else if (currentStatsTab === 2) {
+    impactEffectsBtn.classList.remove("text-gray-300");
+    impactEffectsBtn.classList.add("text-white", "underline", "underline-offset-6");
+    
+    impactEffectsDot.classList.remove("bg-gray-400", "size-2");
+    impactEffectsDot.classList.add("bg-white", "size-3");
+
+    essentialStatsBtn.classList.remove("text-white", "underline", "underline-offset-6");
+    orbitalStatsBtn.classList.remove("text-white", "underline", "underline-offset-6");
+
+    essentialStatsBtn.classList.add("text-gray-300");
+    orbitalStatsBtn.classList.add("text-gray-300");
+
+    essentialStatsDot.classList.remove("bg-white", "size-3");
+    essentialStatsDot.classList.add("bg-gray-400", "size-2");
+
+    orbitalStatsDot.classList.remove("bg-white", "size-3");
+    orbitalStatsDot.classList.add("bg-gray-400", "size-2");
+
+    essentialStatsDetails.classList.add("hidden");
+    orbitalStatsDetails.classList.add("hidden");
+    impactEffectsDetails.classList.remove("hidden");
+  }
+}
+
+essentialStatsBtn.addEventListener("click", () => {
+  currentStatsTab = 0;
+  updateStatsTab();
+});
+
+orbitalStatsBtn.addEventListener("click", () => {
+  currentStatsTab = 1;
+  updateStatsTab();
+});
+
+impactEffectsBtn.addEventListener("click", () => {
+  currentStatsTab = 2;
+  updateStatsTab();
+});
+
+const previousTabBtn = document.getElementById("previousTab");
+const nextTabBtn = document.getElementById("nextTab");
+
+previousTabBtn.addEventListener("click", () => {
+  currentStatsTab = (currentStatsTab - 1 + 3) % 3;
+  updateStatsTab();
+});
+
+nextTabBtn.addEventListener("click", () => {
+  currentStatsTab = (currentStatsTab + 1) % 3;
+  updateStatsTab();
+});
+
 // --- Constants ---
 const AU = 149597870.7; // km
 const scaleFactor = 0.00005;

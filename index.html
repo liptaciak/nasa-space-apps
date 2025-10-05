@@ -45,13 +45,18 @@
                         <p id="date" class="text-xl font-mono font-bold uppercase">MMM DD, YYYY</p>
                         <p id="time" class="text-gray-300 font-mono font-semibold tracking-wider">HH:MM:SS</p>
                     </div>
-                    <div class="relative">
-                        <div class="bg-radial from-gray-800 to-white h-[4px] w-full rounded-md"></div>
+                    <div class="relative flex flex-row items-center mt-2">
+                        <div class="bg-gradient-to-r from-gray-800 to-white h-[4px] w-full rounded-md"></div>
+                        <div class="absolute top-[-25px] left-0 text-white text-sm">0.01x</div>
                         <div class="absolute bottom-[-8px] left-1/2 -translate-x-1/2 z-10">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-clock-fill" viewBox="0 0 16 16">
                                 <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
                             </svg>
                         </div>
+                        <div class="absolute top-[-25px] right-0 text-white text-sm">100x</div>
+                    </div>
+                    <div class="flex justify-center">
+                        <p class="text-sm text-gray-400">Time ratio: 1 second/second</p>
                     </div>
                 </div>
             </div>
@@ -67,28 +72,37 @@
                     </button>
                 </div>
                 <div class="flex flex-row space-x-4 items-center">
-                    <p class="text-sm text-white underline underline-offset-6">Essential Stats</p>
-                    <p class="text-sm text-gray-300">Orbital Stats</p>
-                    <p class="text-sm text-gray-300">Impact Effects</p>
+                    <p id="essentialStats" class="text-sm text-white underline underline-offset-6 hover:cursor-pointer transition-colors duration-300">Essential Stats</p>
+                    <p id="orbitalStats" class="text-sm text-gray-300 hover:cursor-pointer transition-colors duration-300">Orbital Stats</p>
+                    <p id="impactEffects" class="text-sm text-gray-300 hover:cursor-pointer transition-colors duration-300">Impact Effects</p>
                 </div>
-                <div class="flex flex-col space-y-2 mt-2">
-                    <span class="text-md text-gray-400">Miss Distance: 0.00027 AU</span>
-                    <span class="text-md text-gray-400">Miss Distance: 0.00027 AU</span>
-                    <span class="text-md text-gray-400">Miss Distance: 0.00027 AU</span>
+                <div id="essentialStatsDetails" class="flex flex-col space-y-1 mt-2 max-w-[23.75vw]">
+                    <span class="text-white text-sm">Eros 433 is the first discovered near-Earth asteroid and the second-largest NEO. It was discovered in 1898 and was the first asteroid to be orbited by a spacecraft (NEAR Shoemaker in 2000).</span>
+                    <span class="text-xs text-gray-400 mt-2">Diameter: 16.84 km</span>
+                    <span class="text-xs text-gray-400">Full name: 433 Eros (A898 PA)</span>
+                    <span class="text-xs text-gray-400">Is potentially hazardous: False</span>
+                    <span class="text-xs text-gray-400">Closest approach: Nov 30 2025 02:18</span>
+                    <span class="text-xs text-gray-400">Miss distance: 0.00027 AU</span>
+                </div>
+                <div id="orbitalStatsDetails"class="flex flex-col space-y-1 mt-2 hidden">
+                    <span class="text-xs text-gray-400">Eccentricity: 0.22</span>
+                </div>
+                <div id="impactEffectsDetails"class="flex flex-col space-y-1 mt-2 hidden">
+                    <span class="text-xs text-gray-400">Miss distance: 0.00027 AU</span>
                 </div>
                 <div class="flex flex-row items-center justify-center space-x-4 mt-6">
-                    <span class="bg-white rounded-full size-3"></span>
-                    <span class="bg-gray-400 rounded-full size-2"></span>
-                    <span class="bg-gray-400 rounded-full size-2"></span>
+                    <span id="essentialStatsDot" class="bg-white rounded-full size-3"></span>
+                    <span id="orbitalStatsDot" class="bg-gray-400 rounded-full size-2"></span>
+                    <span id="impactEffectsDot" class="bg-gray-400 rounded-full size-2"></span>
                 </div>
                 <div class="flex flex-row items-center justify-between">
-                    <div class="flex flex-row items-center justify-start space-x-1.5">
+                    <div id="previousTab" class="flex flex-row items-center justify-start space-x-1.5 hover:cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
                             <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
                         </svg>
                         <p class="text-gray-200">Previous</p>
                     </div>
-                    <div class="flex flex-row items-center justify-end space-x-1.5">
+                    <div id="nextTab" class="flex flex-row items-center justify-end space-x-1.5 hover:cursor-pointer">
                         <p class="text-gray-200">Next</p>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
                             <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
