@@ -63,6 +63,14 @@ filtersModal.addEventListener("click", (e) => {
   }
 });
 
+const closeAsteroidDetailsBtn = document.getElementById("closeAsteroidDetails");
+closeAsteroidDetailsBtn.addEventListener("click", () => {
+  const asteroidDetails = document.getElementById("asteroidDetails");
+  if (asteroidDetails) {
+    asteroidDetails.classList.add("hidden");
+  }
+});
+
 const approachesBtn = document.getElementById("approaches");
 const approachesModal = document.getElementById("approachesModal");
 const closeApproachesModal = document.getElementById("closeApproachesModal");
@@ -98,23 +106,91 @@ const impactEffectsDetails = document.getElementById("impactEffectsDetails");
 
 let currentStatsTab = 0;
 
+// --- SEARCH MODAL FUNCTIONALITY ---
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+let allNeos = [];
+
+// Load NEOs for searching (reuse same data as approaches)
+fetch('./assets/asteroids.json')
+  .then(response => response.json())
+  .then(data => {
+    allNeos = data;
+    renderSearchResults(''); // show all by default
+  });
+
+function renderSearchResults(query) {
+  if (!searchResults) return;
+  searchResults.innerHTML = '';
+  const filtered = allNeos.filter(neo =>
+    neo.name && neo.name.toLowerCase().includes(query.toLowerCase())
+  );
+  if (filtered.length === 0) {
+    searchResults.innerHTML = '<span class="text-gray-500">No results found.</span>';
+    return;
+  }
+  filtered.forEach(neo => {
+    if (!neo.approach_date) return; // skip if no approachDate
+    const approachDate = new Date(neo.approach_date); // already ms
+    const formattedDate = approachDate.toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: '2-digit'
+    });
+    const div = document.createElement('div');
+    div.className = 'flex justify-between items-center group hover:cursor-pointer';
+
+    div.onclick = () => {
+      const asteroidDetails = document.getElementById('asteroidDetails');
+      if (asteroidDetails) {
+        asteroidDetails.classList.remove('hidden');
+
+        searchModal.classList.add("hidden");
+        searchModal.classList.remove("flex");
+      }
+    };
+
+    div.innerHTML = `
+      <p class="font-mono text-gray-300 group-hover:text-white">${neo.name}</p>
+      <span class="text-sm text-gray-500">Approach Date: ${formattedDate}</span>
+    `;
+    searchResults.appendChild(div);
+  });
+}
+
+if (searchInput) {
+  searchInput.addEventListener('input', (e) => {
+    renderSearchResults(e.target.value);
+  });
+}
+
 // Load NEOs and populate approaches list
-fetch('./assets/neos.json')
+fetch('./assets/asteroids.json')
   .then(response => response.json())
   .then(data => {
     const approachesList = document.getElementById('approachesList');
     if (!approachesList) return;
+
     approachesList.innerHTML = '';
-    // Sort by approachDate (epoch, ascending)
-    data.sort((a, b) => (a.approachDate || 0) - (b.approachDate || 0));
+    // Sort by approach_date (epoch, ascending)
+    data.sort((a, b) => (a.approach_date || 0) - (b.approach_date || 0));
     data.forEach(neo => {
-      if (!neo.approachDate) return; // skip if no approachDate
-      const approachDate = new Date(neo.approachDate * 1000); // epoch seconds to ms
+      if (!neo.approach_date) return; // skip if no approachDate
+      const approachDate = new Date(neo.approach_date); // already ms
       const formattedDate = approachDate.toLocaleDateString('en-US', {
         year: 'numeric', month: 'short', day: '2-digit'
       });
       const div = document.createElement('div');
       div.className = 'flex justify-between items-center group hover:cursor-pointer';
+
+      div.onclick = () => {
+        const asteroidDetails = document.getElementById('asteroidDetails');
+        if (asteroidDetails) {
+          asteroidDetails.classList.remove('hidden');
+
+          approachesModal.classList.add("hidden");
+          approachesModal.classList.remove("flex");
+        }
+      };
+
       div.innerHTML = `
         <p class="font-mono text-gray-300 group-hover:text-white">${neo.name}</p>
         <span class="text-sm text-gray-500">Approach Date: ${formattedDate}</span>
