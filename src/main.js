@@ -1,7 +1,6 @@
 import * as THREE from "three/webgpu";
 import { normalWorldGeometry, texture, vec3, vec4, normalize, positionWorld, cameraPosition, color, uniform, mix } from "three/tsl";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { makeTextSprite } from "./drawingUtils";
 
 const dateElement = document.getElementById("date");
 const timeElement = document.getElementById("time");
@@ -125,22 +124,52 @@ const bgTexture = textureLoader.load("assets/textures/milky_way.webp");
 bgTexture.colorSpace = THREE.SRGBColorSpace;
 scene.background = bgTexture;
 
+// Load other planet textures
+const mercuryTexture = textureLoader.load("assets/textures/mercury.jpg");
+const venusTexture = textureLoader.load("assets/textures/venus.jpg");
+const marsTexture = textureLoader.load("assets/textures/mars.jpg");
+const jupiterTexture = textureLoader.load("assets/textures/jupiter.jpg");
+const saturnTexture = textureLoader.load("assets/textures/saturn.jpg");
+const uranusTexture = textureLoader.load("assets/textures/uranus.jpg");
+const neptuneTexture = textureLoader.load("assets/textures/neptune.jpg");
+const moonTexture = textureLoader.load("assets/textures/moon.jpg");
+
 // --- Sun ---
 const sunMesh = new THREE.Mesh(
   new THREE.SphereGeometry(sunRadius, 64, 64),
-  new THREE.MeshBasicMaterial({ map: sunTexture })
+  new THREE.MeshBasicMaterial({ 
+    map: sunTexture,
+    toneMapped: false // Sun should not be affected by tone mapping
+  })
 );
 scene.add(sunMesh);
 
-// --- Lighting (Like your example) ---
-const sunLight = new THREE.DirectionalLight("#ffffff", 2);
+// --- Enhanced Lighting System ---
+const sunLight = new THREE.DirectionalLight("#ffffff", 3);
 sunLight.position.set(0, 0, 0);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.camera.far = 500000;
 scene.add(sunLight);
+
+// Ambient light to ensure all objects are visible
+const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+scene.add(ambientLight);
+
+// Point light at sun position for additional illumination
+const pointLight = new THREE.PointLight(0xffffff, 1, 100000);
+pointLight.position.set(0, 0, 0);
+scene.add(pointLight);
+
+// Hemisphere light for natural outdoor lighting
+const hemisphereLight = new THREE.HemisphereLight(0x4444ff, 0x202020, 0.3);
+scene.add(hemisphereLight);
 
 // --- Moons Data ---
 const moonsData = {
   Earth: [
-    { name: "Moon", radius: 0.27, distance: 8, color: 0x888888, orbitSpeed: 0.1 }
+    { name: "Moon", radius: 0.27, distance: 8, color: 0x888888, orbitSpeed: 0.1, texture: moonTexture }
   ],
   Mars: [
     { name: "Phobos", radius: 0.15, distance: 6, color: 0xaaaaaa, orbitSpeed: 0.2 },
@@ -172,12 +201,12 @@ const moonMeshes = [];
 const moonLabels = [];
 const moonOrbits = [];
 
-// --- Earth with TSL Shader (Like your example) ---
+// --- Earth with TSL Shader ---
 const earthRadius = planetScale;
 const globe = new THREE.Group();
 globe.name = "earth";
 
-// TSL Shader Material for Earth (like your example)
+// TSL Shader Material for Earth
 const atmosphereDayColor = uniform(color("#4db2ff"));
 const atmosphereTwilightColor = uniform(color("#000000"));
 
@@ -210,7 +239,7 @@ const earth = new THREE.Mesh(
 );
 globe.add(earth);
 
-// Atmosphere (like your example)
+// Atmosphere
 const atmosphereMaterial = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide, transparent: true });
 let alpha = fresnel.remap(0.73, 1, 1, 0).pow(3);
 const lightFactor = sunOrientation.smoothstep(-0.5, 1).clamp(0,1);
@@ -232,21 +261,22 @@ scene.add(globe);
 // --- Camera & Controls ---
 camera.position.set(0, 200, 500);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = false;
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
 controls.minDistance = 50;
 controls.maxDistance = 100000;
 controls.target.copy(globe.position);
 
-// --- Planets ---
+// --- Planets with Textures ---
 const planets = [
-  { name: "Mercury", radiusAU: 0.387, inclination: 7, color: 0x888888, size: 0.38, hasMoons: false },
-  { name: "Venus", radiusAU: 0.723, inclination: 3.39, color: 0xe6b856, size: 0.95, hasMoons: false },
-  { name: "Earth", radiusAU: 1.0, inclination: 0, color: 0x2233ff, size: 1.0, hasMoons: true },
-  { name: "Mars", radiusAU: 1.524, inclination: 1.85, color: 0xff6633, size: 0.53, hasMoons: true },
-  { name: "Jupiter", radiusAU: 5.203, inclination: 1.3, color: 0xffaa66, size: 11.2, hasMoons: true },
-  { name: "Saturn", radiusAU: 9.537, inclination: 2.49, color: 0xffdd99, size: 9.45, hasMoons: true },
-  { name: "Uranus", radiusAU: 19.191, inclination: 0.77, color: 0x99ddff, size: 4.01, hasMoons: true },
-  { name: "Neptune", radiusAU: 30.07, inclination: 1.77, color: 0x3366ff, size: 3.88, hasMoons: true }
+  { name: "Mercury", radiusAU: 0.387, inclination: 7, color: 0x888888, size: 0.38, hasMoons: false, texture: mercuryTexture },
+  { name: "Venus", radiusAU: 0.723, inclination: 3.39, color: 0xe6b856, size: 0.95, hasMoons: false, texture: venusTexture },
+  { name: "Earth", radiusAU: 1.0, inclination: 0, color: 0x2233ff, size: 1.0, hasMoons: true, texture: dayTexture },
+  { name: "Mars", radiusAU: 1.524, inclination: 1.85, color: 0xff6633, size: 0.53, hasMoons: true, texture: marsTexture },
+  { name: "Jupiter", radiusAU: 5.203, inclination: 1.3, color: 0xffaa66, size: 11.2, hasMoons: true, texture: jupiterTexture },
+  { name: "Saturn", radiusAU: 9.537, inclination: 2.49, color: 0xffdd99, size: 9.45, hasMoons: true, texture: saturnTexture },
+  { name: "Uranus", radiusAU: 19.191, inclination: 0.77, color: 0x99ddff, size: 4.01, hasMoons: true, texture: uranusTexture },
+  { name: "Neptune", radiusAU: 30.07, inclination: 1.77, color: 0x3366ff, size: 3.88, hasMoons: true, texture: neptuneTexture }
 ];
 
 const planetMeshes = [];
@@ -331,13 +361,16 @@ function createMoon(planetMesh, moonData, moonIndex) {
   const moonDistance = planetRadius * moonData.distance;
   
   // Create moon mesh
+  const moonMaterial = new THREE.MeshStandardMaterial({ 
+    map: moonData.texture || null,
+    color: moonData.texture ? 0xffffff : moonData.color,
+    roughness: 0.8,
+    metalness: 0.2
+  });
+  
   const moon = new THREE.Mesh(
     new THREE.SphereGeometry(moonRadius, 12, 12),
-    new THREE.MeshStandardMaterial({ 
-      color: moonData.color,
-      roughness: 0.8,
-      metalness: 0.2
-    })
+    moonMaterial
   );
   
   // Position moon relative to planet
@@ -354,7 +387,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
     distance: moonDistance,
     orbitSpeed: moonData.orbitSpeed,
     angle: angle,
-    localPosition: moon.position.clone() // Store local position
+    localPosition: moon.position.clone()
   };
   
   // Add moon to planet (so it moves with the planet)
@@ -376,7 +409,7 @@ function createMoon(planetMesh, moonData, moonIndex) {
     label.userData.moon = moon;
     label.position.copy(moon.position);
     label.position.y += moonRadius * 4;
-    planetMesh.add(label); // Add label to planet so it moves with the planet
+    planetMesh.add(label);
     moonLabels.push(label);
   }
   
@@ -469,13 +502,16 @@ planets.forEach(p => {
   if (p.name === "Earth") return;
 
   const radius = planetScale * p.size;
+  const material = new THREE.MeshStandardMaterial({ 
+    map: p.texture || null,
+    color: p.texture ? 0xffffff : p.color,
+    roughness: 0.8,
+    metalness: 0.2
+  });
+
   const mesh = new THREE.Mesh(
     new THREE.SphereGeometry(radius, 32, 32),
-    new THREE.MeshStandardMaterial({ 
-      color: p.color,
-      roughness: 0.8,
-      metalness: 0.2
-    })
+    material
   );
 
   const orbitalRadius = p.radiusAU * AU * scaleFactor;
@@ -555,13 +591,12 @@ if (moonsData.Earth) {
 }
 
 // --- NEOs ---
-const neos = [
-  {
-    name: "Apophis", semiMajorAxis: 0.922, eccentricity: 0.191, inclination: 3.3,
-    longitudeOfAscendingNode: 204.4, argumentOfPeriapsis: 126.4, meanAnomaly: 180,
-    radius: 0.2, color: 0xff4444
-  }
-];
+async function load_neos(){
+    const res = await fetch("assets/neos.json");
+    const neoData = await res.json();
+    return neoData;
+}
+const neos = await load_neos();
 
 const neoMeshes = [];
 const neoLabels = [];
@@ -672,17 +707,6 @@ function addNEOsToScene() {
   neos.forEach(neo => drawNEO(neo, neo.name, neo.radius));
 }
 
-// --- Debug Axes ---
-function addDebugAxes() {
-  const axesHelper = new THREE.AxesHelper(10000);
-  scene.add(axesHelper);
-  const gridHelper = new THREE.GridHelper(50000, 100, 0x444444, 0x222222);
-  scene.add(gridHelper);
-  console.log("Debug axes enabled");
-}
-
-addDebugAxes();
-
 // --- Animate function ---
 function animate() {
   const delta = clock.getDelta();
@@ -712,7 +736,7 @@ function animate() {
   // Update NEOs
   neoMeshes.forEach(neoMesh => updateNEOPosition(neoMesh, delta));
 
-  // Update moons (they automatically move with their parent planets)
+  // Update moons
   moonMeshes.forEach(moon => {
     const data = moon.userData;
     data.angle += data.orbitSpeed * delta * 20;
@@ -747,6 +771,7 @@ function animate() {
 
   // Update lighting to follow sun
   sunLight.position.copy(sunMesh.position);
+  pointLight.position.copy(sunMesh.position);
 
   const earthMovement = new THREE.Vector3().subVectors(globe.position, previousEarthPosition);
   camera.position.add(earthMovement);
