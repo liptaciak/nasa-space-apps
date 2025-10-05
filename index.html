@@ -4,6 +4,8 @@
         <meta charset="utf-8" />
         <title>Szponciciele</title>
         <link rel="stylesheet" href="./output.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     </head>
@@ -98,7 +100,9 @@
                     <span class="text-xs text-gray-400">Aphelion distance (Q): 1.7830 AU</span>
                 </div>
                 <div id="impactEffectsDetails" class="flex flex-col space-y-1 mt-2 hidden">
-                    <button id="mapButton">Show impact summary</button>
+                    <button id="mapButton" class="bg-[--color-primary] text-white px-4 py-2 rounded-md hover:bg-[--color-primary-light] transition-colors hover:cursor-pointer">
+                            View Impact Map
+                    </button>
                 </div>
                 <div class="flex flex-row items-center justify-center space-x-4 mt-6">
                     <span id="essentialStatsDot" class="bg-white rounded-full size-3"></span>
@@ -136,7 +140,7 @@
                 </div>
             </div>
         </div>
-        <div id="filtersModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 backdrop-blur-xl transition-all duration-300">
+<div id="filtersModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 backdrop-blur-xl transition-all duration-300">
         <div class="bg-black/60 backdrop-blur-md border border-gray-600 rounded-xl p-8 w-[40rem] max-w-[90%] shadow-2xl text-gray-200">
             <div class="flex flex-col space-y-6">
             <!-- Header -->
@@ -202,6 +206,21 @@
             </div>
         </div>
         </div>
+        <div id="filtersModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 backdrop-blur-xl transition-all duration-300">
+            <div class="bg-black/60 backdrop-blur-md border border-gray-600 rounded-xl p-8 w-[40rem] max-w-[90%] shadow-2xl text-gray-200">
+                <div class="flex flex-col space-y-5">
+                    <div class="flex flex-row justify-between items-center">
+                        <h2 class="text-2xl font-bold tracking-wide">Filters</h2>
+                        <button id="closeFiltersModal" class="text-gray-400 hover:text-white hover:cursor-pointer transition-all duration-300 hover:scale-110">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707 l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-gray-400">TODO</p>
+                </div>
+            </div>
+        </div>
         <div id="searchModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 backdrop-blur-xl transition-all duration-300">
             <div class="bg-black/60 backdrop-blur-md border border-gray-600 rounded-xl p-8 w-[40rem] max-w-[90%] shadow-2xl text-gray-200">
                 <div class="flex flex-col space-y-5">
@@ -217,7 +236,7 @@
                         <input type="text"
                 id="searchInput"
                 placeholder="Search asteroids or names..."
-                class="w-full bg-black/30 border border-gray-600 rounded-xl px-12 py-3 
+                class="w-full bg-black/30 border border-gray-600 rounded-xl px-12 py-3
                     focus:outline-none focus:border-gray-300 placeholder-gray-500 text-lg" />
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" viewBox="0 0 16 16">
                             <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
@@ -226,6 +245,48 @@
                     <div id="searchResults" class="mt-4 space-y-6 pr-6 max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"></div>
                 </div>
             </div>
+        </div>
+        <div id="mapModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+            <div class="p-8 rounded-lg relative w-full h-screen">
+                <div id="mapContainer" class="w-full h-screen overflow-hidden"></div>
+            </div>
+            <div id="mapStats" class="w-1/3 h-full bg-black/40 backdrop-blur-xl p-6 overflow-y-auto border-l border-gray-200">
+                  <div class="flex flex-row items-center justify-between border-b border-gray-300 pb-2">
+                    <h3 class="text-xl font-bold mb-4 text-white">Simulated Impact Statistics</h3>
+                    <button id="closeMapModal" class="absolute top-2 right-2 text-white hover:text-gray-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                  </div>
+                  <div class="space-y-4">
+                    <div class="bg-neutral-900 p-4 rounded-lg shadow-sm"></div>
+                      <h4 class="font-semibold text-white mb-2">Affected Areas</h4>
+                      <ul class="text-sm space-y-1 text-gray-200">
+                        <li><strong>Countries:</strong> 12</li>
+                        <li><strong>Population Exposed:</strong> 1.8 billion</li>
+                        <li><strong>Crucial Facilities:</strong> 247 (airports, power plants, hospitals)</li>
+                      </ul>
+                    </div>
+                    <div class="bg-neutral-900 p-4 rounded-lg shadow-sm">
+                      <h4 class="font-semibold text-white mb-2">Economic Impact</h4>
+                      <ul class="text-sm space-y-1 text-gray-200">
+                        <li><strong>Estimated Costs:</strong> $1.2 trillion USD</li>
+                        <li><strong>Infrastructure Damage:</strong> 65% of major cities</li>
+                        <li><strong>Environmental Cleanup:</strong> $450 billion USD</li>
+                      </ul>
+                    </div>
+                    <div class="bg-neutral-900 p-4 rounded-lg shadow-sm">
+                      <h4 class="font-semibold text-white mb-2">Casualties &amp; Effects</h4>
+                      <ul class="text-sm space-y-1 text-gray-200">
+                        <li><strong>Estimated Fatalities:</strong> 450 million</li>
+                        <li><strong>Injuries:</strong> 1.1 billion</li>
+                        <li><strong>Global Climate Disruption:</strong> 5-10 years of cooling</li>
+                      </ul>
+                    </div>
+                    <p class="text-xs text-gray-300 mt-4 italic">These are simulated estimates based on a hypothetical direct impact scenario for 433 Eros. Actual close approach on Nov 30, 2025, poses no collision risk.</p>
+                  </div>
+                </div>
         </div>
         <script type="module" src="./src/main.js"></script>
     </body>
