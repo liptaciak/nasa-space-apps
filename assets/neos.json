@@ -1,0 +1,25 @@
+[
+  {
+    "name": "Apophis",
+    "semiMajorAxis": 0.922,
+    "eccentricity": 0.191,
+    "inclination": 3.3,
+    "longitudeOfAscendingNode": 204.4,
+    "argumentOfPeriapsis": 126.4,
+    "meanAnomaly": 180,
+    "radius": 0.2,
+    "color": 16724736
+  },
+  {
+    "name": "Eros 433",
+    "semiMajorAxis": 1.458,
+    "eccentricity": 0.223,
+    "inclination": 10.829,
+    "longitudeOfAscendingNode": 304.401,
+    "argumentOfPeriapsis": 178.664,
+    "meanAnomaly": 320,
+    "radius": 0.15,
+    "color": 16755200,
+    "info": "Eros 433 is the first discovered near-Earth asteroid and the second-largest NEO. It was discovered in 1898 and was the first asteroid to be orbited by a spacecraft (NEAR Shoemaker in 2000)."
+  }
+]
