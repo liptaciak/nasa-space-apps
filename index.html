@@ -98,7 +98,7 @@
                     <span class="text-xs text-gray-400">Aphelion distance (Q): 1.7830 AU</span>
                 </div>
                 <div id="impactEffectsDetails" class="flex flex-col space-y-1 mt-2 hidden">
-                    <span class="text-xs text-gray-400">Miss distance: 0.00027 AU</span>
+                    <button id="mapButton">Show impact summary</button>
                 </div>
                 <div class="flex flex-row items-center justify-center space-x-4 mt-6">
                     <span id="essentialStatsDot" class="bg-white rounded-full size-3"></span>
@@ -136,72 +136,72 @@
                 </div>
             </div>
         </div>
-<div id="filtersModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 backdrop-blur-xl transition-all duration-300">
-  <div class="bg-black/60 backdrop-blur-md border border-gray-600 rounded-xl p-8 w-[40rem] max-w-[90%] shadow-2xl text-gray-200">
-    <div class="flex flex-col space-y-6">
-      <!-- Header -->
-      <div class="flex flex-row justify-between items-center">
-        <h2 class="text-2xl font-bold tracking-wide">Filters</h2>
-        <button id="closeFiltersModal" class="text-gray-400 hover:text-white hover:cursor-pointer transition-all duration-300 hover:scale-110">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-          </svg>
-        </button>
-      </div>
+        <div id="filtersModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 backdrop-blur-xl transition-all duration-300">
+        <div class="bg-black/60 backdrop-blur-md border border-gray-600 rounded-xl p-8 w-[40rem] max-w-[90%] shadow-2xl text-gray-200">
+            <div class="flex flex-col space-y-6">
+            <!-- Header -->
+            <div class="flex flex-row justify-between items-center">
+                <h2 class="text-2xl font-bold tracking-wide">Filters</h2>
+                <button id="closeFiltersModal" class="text-gray-400 hover:text-white hover:cursor-pointer transition-all duration-300 hover:scale-110">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                </svg>
+                </button>
+            </div>
 
-      <!-- Date Range -->
-      <div class="space-y-3">
-        <h3 class="text-lg font-semibold">Date Range</h3>
-        <div class="flex flex-row gap-4">
-          <div class="flex flex-col w-1/2">
-            <label for="startDate" class="text-sm text-gray-400">Start Date</label>
-            <input type="date" id="startDate" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-          </div>
-          <div class="flex flex-col w-1/2">
-            <label for="endDate" class="text-sm text-gray-400">End Date</label>
-            <input type="date" id="endDate" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-          </div>
+            <!-- Date Range -->
+            <div class="space-y-3">
+                <h3 class="text-lg font-semibold">Date Range</h3>
+                <div class="flex flex-row gap-4">
+                <div class="flex flex-col w-1/2">
+                    <label for="startDate" class="text-sm text-gray-400">Start Date</label>
+                    <input type="date" id="startDate" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                </div>
+                <div class="flex flex-col w-1/2">
+                    <label for="endDate" class="text-sm text-gray-400">End Date</label>
+                    <input type="date" id="endDate" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                </div>
+                </div>
+            </div>
+
+            <!-- Radius Filter -->
+            <div class="space-y-3">
+                <h3 class="text-lg font-semibold">Radius (km)</h3>
+                <div class="flex flex-row gap-4">
+                <div class="flex flex-col w-1/2">
+                    <label for="minRadius" class="text-sm text-gray-400">Min Radius</label>
+                    <input type="number" id="minRadius" placeholder="e.g. 10" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                </div>
+                <div class="flex flex-col w-1/2">
+                    <label for="maxRadius" class="text-sm text-gray-400">Max Radius</label>
+                    <input type="number" id="maxRadius" placeholder="e.g. 1000" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                </div>
+                </div>
+            </div>
+
+            <!-- Miss Distance Filter -->
+            <div class="space-y-3">
+                <h3 class="text-lg font-semibold">Miss Distance (km)</h3>
+                <div class="flex flex-row gap-4">
+                <div class="flex flex-col w-1/2">
+                    <label for="minMissDistance" class="text-sm text-gray-400">Min Distance</label>
+                    <input type="number" id="minMissDistance" placeholder="e.g. 10000" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                </div>
+                <div class="flex flex-col w-1/2">
+                    <label for="maxMissDistance" class="text-sm text-gray-400">Max Distance</label>
+                    <input type="number" id="maxMissDistance" placeholder="e.g. 1000000" class="mt-1 p-2 rounded-md bbg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-end space-x-4 pt-4">
+                <button id="clearFilters" class="px-4 py-2 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-all duration-300">Clear</button>
+                <button id="applyFilters" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-all duration-300">Apply</button>
+            </div>
+            </div>
         </div>
-      </div>
-
-      <!-- Radius Filter -->
-      <div class="space-y-3">
-        <h3 class="text-lg font-semibold">Radius (km)</h3>
-        <div class="flex flex-row gap-4">
-          <div class="flex flex-col w-1/2">
-            <label for="minRadius" class="text-sm text-gray-400">Min Radius</label>
-            <input type="number" id="minRadius" placeholder="e.g. 10" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-          </div>
-          <div class="flex flex-col w-1/2">
-            <label for="maxRadius" class="text-sm text-gray-400">Max Radius</label>
-            <input type="number" id="maxRadius" placeholder="e.g. 1000" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-          </div>
         </div>
-      </div>
-
-      <!-- Miss Distance Filter -->
-      <div class="space-y-3">
-        <h3 class="text-lg font-semibold">Miss Distance (km)</h3>
-        <div class="flex flex-row gap-4">
-          <div class="flex flex-col w-1/2">
-            <label for="minMissDistance" class="text-sm text-gray-400">Min Distance</label>
-            <input type="number" id="minMissDistance" placeholder="e.g. 10000" class="mt-1 p-2 rounded-md bg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-          </div>
-          <div class="flex flex-col w-1/2">
-            <label for="maxMissDistance" class="text-sm text-gray-400">Max Distance</label>
-            <input type="number" id="maxMissDistance" placeholder="e.g. 1000000" class="mt-1 p-2 rounded-md bbg-transparent border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="flex justify-end space-x-4 pt-4">
-        <button id="clearFilters" class="px-4 py-2 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-all duration-300">Clear</button>
-        <button id="applyFilters" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-all duration-300">Apply</button>
-      </div>
-    </div>
-  </div>
-</div>
         <div id="searchModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 backdrop-blur-xl transition-all duration-300">
             <div class="bg-black/60 backdrop-blur-md border border-gray-600 rounded-xl p-8 w-[40rem] max-w-[90%] shadow-2xl text-gray-200">
                 <div class="flex flex-col space-y-5">
